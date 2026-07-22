@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0A0E1A">
 <title>LORDSHOP — Top Up Diamond Mobile Legends</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,11 +26,11 @@
     --ok:#5FE0A0;
   }
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
-  html{scroll-behavior:smooth; overscroll-behavior:none; height:100%;}
-  html, body{ overscroll-behavior-y:none; }
+  html{scroll-behavior:smooth; overscroll-behavior:none; height:100%; height:100dvh;}
+  html, body{ overscroll-behavior-y:none; width:100%; }
   body{
     background:var(--bg-void); color:var(--text); font-family:'Plus Jakarta Sans', sans-serif;
-    overflow-x:hidden; padding-bottom:78px; min-height:100%;
+    overflow-x:hidden; padding-bottom:calc(78px + env(safe-area-inset-bottom)); min-height:100%; min-height:100dvh;
     -webkit-user-select:none; user-select:none;
     background-image:
       radial-gradient(circle at 15% 8%, rgba(79,217,232,0.08), transparent 40%),
@@ -43,14 +44,14 @@
   @media (prefers-reduced-motion: reduce){
     *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
   }
-  .wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 max(24px, env(safe-area-inset-right)) 0 max(24px, env(safe-area-inset-left));}
 
   /* view switching: only one visible at a time, same file */
   .view{display:none;}
   .view.active{display:block;}
 
   /* ---------- NAV ---------- */
-  nav.top-nav{ position:sticky; top:0; z-index:50; background:rgba(10,14,26,0.85); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); }
+  nav.top-nav{ position:sticky; top:0; z-index:50; background:rgba(10,14,26,0.85); backdrop-filter:blur(10px); border-bottom:1px solid var(--line); padding-top:env(safe-area-inset-top); }
   nav .wrap{display:flex; align-items:center; justify-content:space-between; height:72px;}
   .logo{display:flex; align-items:center; gap:10px; font-family:'Rajdhani'; font-weight:700; font-size:22px; letter-spacing:0.04em;}
   .logo .gem{width:16px; height:16px; background:linear-gradient(135deg, var(--cyan), var(--gold)); clip-path:polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); flex-shrink:0;}
@@ -155,6 +156,24 @@
   }
   .offline-dot{width:8px; height:8px; border-radius:50%; background:var(--danger); display:inline-block; margin-right:6px; vertical-align:middle;}
   #offlineLock .offline-status{font-size:12px; color:var(--text-dim); margin-top:16px; letter-spacing:0.03em; text-transform:uppercase;}
+
+  /* ---------- NET STATUS BADGE: indikator online/offline asli (real ping ke server) ---------- */
+  .net-status{
+    display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--ok);
+    padding:6px 11px; border-radius:999px; border:1px solid var(--line); background:var(--bg-panel-2);
+    letter-spacing:0.02em; transition:color .2s ease, border-color .2s ease; flex-shrink:0;
+  }
+  .net-status .net-dot{
+    width:7px; height:7px; border-radius:50%; background:var(--ok); flex-shrink:0;
+    box-shadow:0 0 0 0 rgba(95,224,160,0.5); animation:netDotPulseOk 2.2s ease-in-out infinite;
+  }
+  @keyframes netDotPulseOk{0%,100%{box-shadow:0 0 0 0 rgba(95,224,160,0.35);} 50%{box-shadow:0 0 0 5px rgba(95,224,160,0);}}
+  .net-status.checking{color:var(--text-dim);}
+  .net-status.checking .net-dot{background:var(--text-dim); animation:none;}
+  .net-status.offline{color:var(--danger); border-color:var(--danger);}
+  .net-status.offline .net-dot{background:var(--danger); animation:netDotPulseBad 1.2s ease-in-out infinite;}
+  @keyframes netDotPulseBad{0%,100%{box-shadow:0 0 0 0 rgba(255,93,108,0.4);} 50%{box-shadow:0 0 0 5px rgba(255,93,108,0);}}
+  @media (max-width:520px){ .net-status .net-status-label{display:none;} .net-status{padding:6px 8px;} }
   .ad-modal-overlay{
     position:fixed; inset:0; background:rgba(6,9,17,0.8); backdrop-filter:blur(5px);
     display:none; align-items:center; justify-content:center; z-index:95; padding:20px;
@@ -285,7 +304,7 @@
   }
 
   /* ---------- ORDERS VIEW ---------- */
-  .orders-wrap{min-height:100vh; padding:40px 16px;}
+  .orders-wrap{min-height:100vh; min-height:100dvh; padding:40px 16px;}
   .orders-inner{max-width:640px; margin:0 auto;}
   .orders-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;}
   .orders-head h2{font-size:24px;}
@@ -312,7 +331,7 @@
     position:fixed; left:0; right:0; bottom:0; z-index:80;
     background:rgba(10,14,26,0.95); backdrop-filter:blur(10px); border-top:1px solid var(--line);
     display:flex; justify-content:space-around; align-items:center;
-    padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+    padding:8px max(10px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
   }
   .bn-item{
     background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:4px;
@@ -376,7 +395,59 @@
   .help-fab{
     position:fixed; right:16px; bottom:88px; z-index:70; background:var(--gold); color:#0A0E1A; border:none;
     border-radius:999px; padding:12px 18px; font-weight:700; font-size:13.5px; display:flex; align-items:center; gap:8px;
-    cursor:pointer; box-shadow:0 12px 26px -10px rgba(227,179,65,0.6); font-family:inherit;
+    cursor:grab; box-shadow:0 12px 26px -10px rgba(227,179,65,0.6); font-family:inherit;
+    touch-action:none; user-select:none;
+    transition:box-shadow .2s ease, left .28s cubic-bezier(.34,1.56,.64,1), top .28s cubic-bezier(.34,1.56,.64,1);
+  }
+  .help-fab.dragging{ transition:none; cursor:grabbing; box-shadow:0 18px 40px -12px rgba(227,179,65,0.8); }
+
+  /* ---------- COPY CHIP (salin User ID / Zone ID terpisah di riwayat admin) ---------- */
+  .copy-chip{
+    cursor:pointer; border-bottom:1px dashed var(--text-dim); padding:0 1px;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .copy-chip:hover{ color:var(--cyan); border-color:var(--cyan); }
+  .copy-chip.copied{ color:var(--ok); border-color:var(--ok); font-weight:700; }
+
+  /* ---------- VOUCHER DISKON (di Modal Akun) ---------- */
+  .voucher-box{
+    margin-top:14px; padding:14px; border:1px solid var(--gold-dim); border-radius:8px;
+    background:rgba(227,179,65,0.06);
+  }
+  .voucher-title{ font-weight:700; font-size:14px; margin-bottom:6px; }
+  .voucher-status{ font-size:12.5px; color:var(--text-dim); line-height:1.6; }
+  .voucher-status b{ color:var(--gold); }
+  .voucher-redeem-row{ display:flex; gap:8px; margin-top:10px; }
+  .voucher-redeem-row input{
+    flex:1; background:var(--bg-panel-2); border:1px solid var(--line); border-radius:6px; color:var(--text);
+    padding:10px 12px; font-size:13.5px; font-family:inherit; text-transform:uppercase;
+  }
+  .voucher-redeem-row input:focus{ border-color:var(--cyan); }
+  .voucher-redeem-row button{
+    background:var(--gold); color:#0A0E1A; border:none; border-radius:6px; padding:0 16px;
+    font-weight:700; font-size:13px; cursor:pointer; font-family:inherit;
+  }
+
+  /* ---------- MODAL FALLBACK SALIN MANUAL ---------- */
+  .copy-fallback-overlay{
+    position:fixed; inset:0; z-index:700; background:rgba(6,9,17,0.78); backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center; padding:24px;
+  }
+  .copy-fallback-overlay.open{ display:flex; }
+  .copy-fallback-card{
+    max-width:360px; width:100%; background:var(--bg-panel); border:1px solid var(--gold-dim);
+    border-radius:12px; padding:22px; box-shadow:0 24px 60px -20px rgba(0,0,0,0.7); text-align:center;
+  }
+  .copy-fallback-title{ font-weight:700; font-size:16px; margin-bottom:8px; }
+  .copy-fallback-desc{ font-size:13px; color:var(--text-dim); line-height:1.6; margin-bottom:14px; }
+  .copy-fallback-card input{
+    width:100%; text-align:center; background:var(--bg-panel-2); border:1px solid var(--gold-dim);
+    border-radius:6px; padding:12px; color:var(--text); font-size:15px; font-weight:700;
+    font-family:'Rajdhani'; letter-spacing:0.03em; margin-bottom:14px;
+  }
+  .copy-fallback-close{
+    width:100%; background:var(--gold); color:#0A0E1A; border:none; border-radius:6px;
+    padding:11px; font-weight:700; font-size:13.5px; cursor:pointer; font-family:inherit;
   }
   .help-fab svg{width:18px; height:18px; stroke:#0A0E1A; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
   .help-modal .modal-card{max-width:400px; padding:0; display:flex; flex-direction:column; height:min(600px, 82vh); overflow:hidden;}
@@ -547,7 +618,7 @@
   #toast.show{opacity:1; transform:translate(-50%, 0);}
 
   /* ---------- PAYMENT VIEW ---------- */
-  .pay-wrap{ min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; }
+  .pay-wrap{ min-height:100vh; min-height:100dvh; display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; }
   .pay-card{ width:100%; max-width:460px; background:var(--bg-panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:0 auto; }
   .pay-head{ padding:22px 26px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
   .back-link{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-dim); cursor:pointer; background:none; border:none; font-family:inherit; }
@@ -716,6 +787,20 @@
           </ul>
           <button class="ad-btn-cta" onclick="closeAdAndTopup()">Pesan Sekarang</button>
         </div>
+
+        <!-- Slide 5: Voucher Diskon Biaya Admin -->
+        <div class="ad-slide">
+          <div class="ad-badge">🎟️ Promo Baru!</div>
+          <div class="ad-title">Voucher Diskon Admin</div>
+          <div class="ad-price">Cuma Rp 3.000</div>
+          <div class="ad-desc">Beli sekali, biaya admin GRATIS di setiap top up selama 3 hari penuh!</div>
+          <ul class="ad-perks">
+            <li>Gratis biaya admin tiap transaksi</li>
+            <li>Aktif langsung 3 hari penuh</li>
+            <li>Kode dikirim otomatis setelah disetujui admin</li>
+          </ul>
+          <button class="ad-btn-cta" onclick="closeAdAndBuyVoucher()">Beli Kode Voucher</button>
+        </div>
       </div>
     </div>
     
@@ -750,6 +835,9 @@
         <a href="#trust">Kenapa Kami</a>
       </div>
       <div class="nav-right">
+        <div class="net-status checking" id="netStatus" title="Status koneksi internet">
+          <span class="net-dot" id="netDot"></span><span class="net-status-label" id="netStatusText">Mengecek...</span>
+        </div>
         <div id="authArea"></div>
         <a href="lordshop.apk" download="LORDSHOP.apk" class="btn-apk-nav" title="Download App Android (.apk)">
           <span>⬇</span><span class="apk-nav-label">Download App</span>
@@ -816,13 +904,13 @@
         <div id="orderDetails" style="display:none; margin-top:24px;">
           <div class="id-form" style="grid-template-columns:1fr 1fr;">
             <div class="field"><label for="uid">User ID</label><input id="uid" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="20" placeholder="Contoh: 123456789"></div>
-            <div class="field"><label for="zid">Zone ID</label><input id="zid" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="Contoh: 1234"></div>
+            <div class="field"><label for="zid">Zone ID</label><input id="zid" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" placeholder="Contoh: 1234"></div>
           </div>
         </div>
 
         <div class="order-bar" id="orderBar" style="display:none;">
           <div class="info">Dipilih: <b id="sumPkgBar">Belum ada paket dipilih</b></div>
-          <div class="info">Total Bayar <span style="font-size:11px;">(sudah termasuk biaya admin Rp 100)</span>: <b id="sumPriceBar">Rp 0</b></div>
+          <div class="info">Total Bayar <span style="font-size:11px;" id="adminFeeNote">(sudah termasuk biaya admin Rp 100)</span>: <b id="sumPriceBar">Rp 0</b></div>
           <div class="order-bar-actions">
             <button type="button" class="btn-cancel-pkg" onclick="cancelPkgSelection()">Batalkan</button>
             <button id="orderBtn" disabled onclick="goToPayment()">Pesan Sekarang</button>
@@ -886,7 +974,7 @@
           Kode ini statis, jadi aplikasi DANA tidak otomatis menampilkan jumlahnya. Salin nominal di bawah lalu tempel di aplikasi saat kirim — jumlah harus persis sama.
           <div class="copy-row">
             <input id="nominalInput" readonly value="Rp 0">
-            <button onclick="copyNominal()">Salin</button>
+            <button onclick="copyNominal(this)">Salin</button>
           </div>
         </div>
 
@@ -1046,12 +1134,23 @@
     </div>
 
     <button class="btn-guest" onclick="closeAccountModal(); openOrders();">Pesanan Saya</button>
+
+    <div class="voucher-box" id="voucherBox">
+      <div class="voucher-title">🎟️ Voucher Diskon Biaya Admin</div>
+      <div class="voucher-status" id="voucherStatusText">Memuat status voucher...</div>
+      <button class="btn-guest" style="margin-top:10px;" onclick="buyVoucherCode()">Beli Kode Voucher (Rp 3.000)</button>
+      <div class="voucher-redeem-row">
+        <input id="voucherRedeemInput" type="text" placeholder="Masukkan kode voucher" autocomplete="off" autocapitalize="characters">
+        <button type="button" onclick="redeemVoucherCode()">Pakai</button>
+      </div>
+    </div>
+
     <button class="btn-guest" style="margin-top:10px; color:var(--danger); border-color:rgba(255,93,108,0.4);" onclick="closeAccountModal(); logout();">Keluar</button>
   </div>
 </div>
 
 <!-- ============== TOMBOL & MODAL: LAYANAN BANTUAN (AI) ============== -->
-<button class="help-fab" onclick="openHelpChat()" aria-label="Layanan Bantuan">
+<button class="help-fab" id="helpFab" aria-label="Layanan Bantuan">
   <svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
   Bantuan
 </button>
@@ -1094,12 +1193,25 @@
 
 <div id="toast"></div>
 
+<!-- ============== MODAL: FALLBACK SALIN MANUAL ==============
+     Dipakai kalau clipboard otomatis (Clipboard API / execCommand) gagal atau
+     diblokir (sering terjadi di WebView Android). Tidak pakai window.prompt()
+     karena banyak WebView juga memblokir/menon-aktifkan prompt(). -->
+<div class="copy-fallback-overlay" id="copyFallbackModal">
+  <div class="copy-fallback-card">
+    <div class="copy-fallback-title">Salin Manual</div>
+    <p class="copy-fallback-desc">Salin otomatis diblokir browser. Teks sudah dipilih — tekan lama pada kotak di bawah lalu pilih "Salin", atau tekan Ctrl+C.</p>
+    <input id="copyFallbackInput" type="text" readonly>
+    <button class="copy-fallback-close" onclick="closeCopyFallbackModal()">Tutup</button>
+  </div>
+</div>
+
 <!-- ============== FIREBASE: penyimpanan pesanan bersama (cloud) ============== -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import {
-    getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, getDoc, setDoc,
-    onSnapshot, query, where, serverTimestamp
+    getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, getDoc, getDocs, setDoc,
+    onSnapshot, query, where, serverTimestamp, runTransaction
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -1126,12 +1238,39 @@
     }catch(e){ console.error('Gagal simpan pesanan ke Firebase:', e); return null; }
   };
 
-  // Dipakai admin untuk menandai Berhasil/Gagal.
-  window.fbUpdateOrderStatus = async function(docId, status, reason){
+  // Dipakai admin untuk menandai Berhasil/Gagal. extraFields opsional dipakai
+  // saat menyetujui pesanan voucher, supaya kode voucher random ikut disimpan.
+  window.fbUpdateOrderStatus = async function(docId, status, reason, extraFields){
     try{
-      await updateDoc(doc(db, 'orders', docId), { status, reason: reason || null });
+      await updateDoc(doc(db, 'orders', docId), { status, reason: reason || null, ...(extraFields || {}) });
       return true;
     }catch(e){ console.error('Gagal update status pesanan:', e); return false; }
+  };
+
+  // Redeem kode voucher diskon: dicari di seluruh pesanan bertipe 'voucher' yang
+  // sudah disetujui admin, lalu ditandai 'redeemed' via transaction supaya kode
+  // yang sama tidak bisa dipakai dua kali walau ada dua orang mencoba bersamaan.
+  window.fbRedeemVoucherCode = async function(code, userId){
+    try{
+      const q = query(ordersCol, where('voucherCode', '==', code), where('type', '==', 'voucher'));
+      const snap = await getDocs(q);
+      if(snap.empty) return { ok:false, message:'Kode voucher tidak ditemukan.' };
+      const targetRef = doc(db, 'orders', snap.docs[0].id);
+      await runTransaction(db, async (tx)=>{
+        const fresh = await tx.get(targetRef);
+        if(!fresh.exists()) throw new Error('not-found');
+        const data = fresh.data();
+        if(data.status !== 'success') throw new Error('not-approved');
+        if(data.redeemed) throw new Error('already-used');
+        tx.update(targetRef, { redeemed:true, redeemedBy:userId, redeemedAt: serverTimestamp() });
+      });
+      return { ok:true };
+    }catch(e){
+      if(e && e.message === 'already-used') return { ok:false, message:'Kode voucher ini sudah pernah dipakai.' };
+      if(e && e.message === 'not-approved') return { ok:false, message:'Kode voucher belum disetujui admin.' };
+      console.error('Gagal redeem voucher:', e);
+      return { ok:false, message:'Gagal memproses kode. Coba lagi.' };
+    }
   };
 
   // Dipakai admin untuk menghapus riwayat pesanan secara permanen.
@@ -1239,6 +1378,30 @@
   ];
   const waNumber = '6285822857389'; // nomor WhatsApp admin
   const ADMIN_FEE = 100; // biaya admin per transaksi
+  const VOUCHER_PRICE = 3000; // harga beli kode voucher diskon
+  const VOUCHER_DURATION_MS = 3 * 24 * 60 * 60 * 1000; // masa aktif voucher: 3 hari
+
+  // Voucher aktif disimpan di currentUser.activeVoucher = { code, expiresAt }.
+  // Mengembalikan null kalau tidak ada voucher aktif atau sudah kedaluwarsa.
+  function getActiveVoucherInfo(){
+    if(!currentUser || !currentUser.activeVoucher) return null;
+    const v = currentUser.activeVoucher;
+    if(!v.expiresAt || Date.now() > v.expiresAt) return null;
+    return v;
+  }
+  function getEffectiveAdminFee(){
+    return getActiveVoucherInfo() ? 0 : ADMIN_FEE;
+  }
+  // Kode acak, tanpa karakter yang gampang tertukar (0/O, 1/I).
+  function generateVoucherCode(){
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for(let i=0; i<10; i++){
+      if(i>0 && i%5===0) code += '-';
+      code += chars[Math.floor(Math.random()*chars.length)];
+    }
+    return code;
+  }
 
   let selected = null;
   let currentOrder = null; // { pkg, price, uid, zid, orderCode, docId }
@@ -1255,8 +1418,9 @@
     }[ch]));
   }
 
-  let currentUser = null; // { type:'google'|'guest', name, email, picture, userId }
+  let currentUser = null; // { type:'google'|'guest', name, email, picture, userId, activeVoucher }
   let pendingCheckout = false;
+  let pendingVoucherPurchase = false;
 
   function formatRupiah(n){ return 'Rp ' + n.toLocaleString('id-ID'); }
 
@@ -1349,6 +1513,10 @@
     if(pendingCheckout){
       pendingCheckout = false;
       goToPayment();
+    }
+    if(pendingVoucherPurchase){
+      pendingVoucherPurchase = false;
+      startVoucherCheckout();
     }
   }
 
@@ -1530,8 +1698,8 @@
         <div class="oi-left">
           <div class="gem-icon"></div>
           <div>
-            <div class="oi-title">${escapeHtml(o.pkg)}</div>
-            <div class="oi-sub">${escapeHtml(o.orderCode)} · ${formatRupiah(o.price)} · ID ${escapeHtml(o.uid)} (${escapeHtml(o.zid)})${o.reason ? ' · ' + escapeHtml(o.reason) : ''}</div>
+            <div class="oi-title">${o.type==='voucher' ? '🎟️ ' : ''}${escapeHtml(o.pkg)}</div>
+            <div class="oi-sub">${o.type==='voucher' ? renderMyVoucherSub(o) : `${escapeHtml(o.orderCode)} · ${formatRupiah(o.price)} · ID ${escapeHtml(o.uid)} (${escapeHtml(o.zid)})${o.reason ? ' · ' + escapeHtml(o.reason) : ''}`}</div>
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -1539,6 +1707,16 @@
         </div>
       </div>
     `).join('');
+  }
+
+  function renderMyVoucherSub(o){
+    let extra = `${escapeHtml(o.orderCode)} · ${formatRupiah(o.price)}`;
+    if(o.status === 'success' && o.voucherCode){
+      extra += ` · Kode kamu: <span class="copy-chip" title="Klik untuk salin kode voucher" onclick="copyChip(this,'${escapeHtml(o.voucherCode)}')">${escapeHtml(o.voucherCode)}</span>`;
+      extra += o.redeemed ? ' (sudah dipakai)' : ' — masukkan di menu Akun untuk dipakai';
+    }
+    if(o.reason) extra += ' · ' + escapeHtml(o.reason);
+    return extra;
   }
 
   function statusLabel(status){
@@ -1752,8 +1930,8 @@
         <div class="oi-left">
           <div class="gem-icon"></div>
           <div>
-            <div class="oi-title">${escapeHtml(o.pkg)}</div>
-            <div class="oi-sub">${escapeHtml(o.orderCode)} · ${formatRupiah(o.price)} · ID ${escapeHtml(o.uid)} (${escapeHtml(o.zid)}) · Akun: ${escapeHtml(o.userName || '-')}${o.reason ? ' · ' + escapeHtml(o.reason) : ''}</div>
+            <div class="oi-title">${o.type==='voucher' ? '🎟️ ' : ''}${escapeHtml(o.pkg)}</div>
+            <div class="oi-sub">${o.type==='voucher' ? renderAdminVoucherSub(o) : renderAdminTopupSub(o)}</div>
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -1768,8 +1946,97 @@
     `).join('');
   }
 
+  function renderAdminTopupSub(o){
+    return `${escapeHtml(o.orderCode)} · ${formatRupiah(o.price)} · ID <span class="copy-chip" title="Klik untuk salin User ID" onclick="copyChip(this,'${escapeHtml(o.uid)}')">${escapeHtml(o.uid)}</span> (<span class="copy-chip" title="Klik untuk salin Zone ID" onclick="copyChip(this,'${escapeHtml(o.zid)}')">${escapeHtml(o.zid)}</span>) · Akun: ${escapeHtml(o.userName || '-')}${o.reason ? ' · ' + escapeHtml(o.reason) : ''}`;
+  }
+
+  function renderAdminVoucherSub(o){
+    let extra = ` · Akun: ${escapeHtml(o.userName || '-')}`;
+    if(o.voucherCode){
+      extra += ` · Kode: <span class="copy-chip" title="Klik untuk salin kode voucher" onclick="copyChip(this,'${escapeHtml(o.voucherCode)}')">${escapeHtml(o.voucherCode)}</span>`;
+      extra += o.redeemed ? ' · Sudah dipakai' : ' · Belum dipakai';
+    }
+    if(o.reason) extra += ' · ' + escapeHtml(o.reason);
+    return `${escapeHtml(o.orderCode)} · ${formatRupiah(o.price)}${extra}`;
+  }
+
+  // Helper generik untuk menyalin teks ke clipboard, dipakai oleh copy-chip
+  // (User ID/Zone ID/kode voucher) maupun tombol Salin nominal DANA.
+  // Coba Clipboard API modern dulu (butuh HTTPS / secure context), lalu
+  // fallback ke execCommand (dicek return value-nya, bukan cuma ada-tidaknya
+  // exception — banyak WebView Android diam-diam mengembalikan false).
+  function copyTextToClipboard(text){
+    if(navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext){
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise((resolve, reject)=>{
+      try{
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.top = '-9999px';
+        ta.style.left = '-9999px';
+        ta.setAttribute('readonly', '');
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, text.length);
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if(ok) resolve(); else reject(new Error('execCommand gagal'));
+      }catch(e){ reject(e); }
+    });
+  }
+
+  // Fallback terakhir kalau Clipboard API maupun execCommand gagal/diblokir.
+  // Tampilkan input yang sudah fokus & terpilih teksnya — sengaja BUKAN
+  // window.prompt() karena banyak WebView Android juga memblokir prompt().
+  // Sambil modal terbuka & teks sudah ter-select, coba sekali lagi execCommand:
+  // di beberapa WebView, copy dari elemen yang benar-benar terlihat & fokus
+  // (bukan textarea tersembunyi off-screen) ternyata masih bisa berhasil.
+  function showCopyFallback(text){
+    const modal = document.getElementById('copyFallbackModal');
+    const input = document.getElementById('copyFallbackInput');
+    input.value = text;
+    modal.classList.add('open');
+    requestAnimationFrame(()=>{
+      input.focus();
+      input.select();
+      if(input.setSelectionRange) input.setSelectionRange(0, text.length);
+      try{
+        if(document.execCommand('copy')){
+          closeCopyFallbackModal();
+          toast('Tersalin: ' + text);
+        }
+      }catch(e){ /* biarkan modal terbuka untuk salin manual */ }
+    });
+  }
+  function closeCopyFallbackModal(){
+    document.getElementById('copyFallbackModal').classList.remove('open');
+  }
+
+  // Salin satu nilai (User ID atau Zone ID) saja ke clipboard, tanpa embel-embel teks lain
+  function copyChip(el, text){
+    const done = ()=>{
+      const old = el.textContent;
+      el.textContent = 'Tersalin!';
+      el.classList.add('copied');
+      setTimeout(()=>{ el.textContent = old; el.classList.remove('copied'); }, 1200);
+    };
+    copyTextToClipboard(text).then(done).catch(()=>{
+      showCopyFallback(text);
+    });
+  }
+
   function adminSetStatus(docId, status){
-    if(window.fbUpdateOrderStatus) window.fbUpdateOrderStatus(docId, status, null);
+    if(!window.fbUpdateOrderStatus) return;
+    const order = lastAdminOrders.find(o => o.docId === docId);
+    if(order && order.type === 'voucher' && status === 'success' && !order.voucherCode){
+      const code = generateVoucherCode();
+      window.fbUpdateOrderStatus(docId, status, null, { voucherCode: code });
+      return;
+    }
+    window.fbUpdateOrderStatus(docId, status, null);
   }
 
   function explainDeleteError(result){
@@ -1845,7 +2112,7 @@
     render();
     const p = packages.find(x=>x.id===id);
     document.getElementById('sumPkgBar').textContent = p.amount;
-    document.getElementById('sumPriceBar').textContent = formatRupiah(p.price + ADMIN_FEE);
+    refreshPriceDisplays(p);
     document.getElementById('orderDetails').style.display = 'block';
     document.getElementById('orderBar').style.display = 'flex';
     updateOrderBtn();
@@ -1860,6 +2127,20 @@
   // Tombol "Batalkan" di order-bar — batalkan pilihan paket TANPA memicu
   // goToPayment() (jadi tidak akan memunculkan alur "Pesan Sekarang", termasuk
   // modal login yang biasa muncul di sana kalau pengunjung belum login).
+  // Perbarui label total bayar & catatan biaya admin di order-bar, dipanggil
+  // saat pilih paket dan saat voucher baru saja dipakai/kedaluwarsa.
+  function refreshPriceDisplays(pkgOverride){
+    const p = pkgOverride || packages.find(x=>x.id===selected);
+    if(!p) return;
+    const fee = getEffectiveAdminFee();
+    const note = document.getElementById('adminFeeNote');
+    if(note){
+      note.textContent = fee > 0
+        ? `(sudah termasuk biaya admin ${formatRupiah(fee)})`
+        : '(biaya admin GRATIS — voucher aktif)';
+    }
+    document.getElementById('sumPriceBar').textContent = formatRupiah(p.price + fee);
+  }
   function cancelPkgSelection(){
     selected = null;
     render();
@@ -1929,6 +2210,7 @@
     document.getElementById('accType').textContent = currentUser.type === 'google' ? 'Akun Google' : 'Akun Tamu';
     document.getElementById('nameEditBox').classList.remove('open');
     document.getElementById('nameEditError').classList.remove('show');
+    renderAccountVoucherStatus();
     document.getElementById('accountModal').classList.add('open');
   }
   function closeAccountModal(){ document.getElementById('accountModal').classList.remove('open'); }
@@ -2036,6 +2318,10 @@
       toast('User ID dan Zone ID hanya boleh berisi angka.');
       return;
     }
+    if(zid.length > 5){
+      toast('Zone ID maksimal 5 digit.');
+      return;
+    }
 
     if(!currentUser){
       pendingCheckout = true;
@@ -2044,17 +2330,19 @@
     }
 
     const orderCode = 'ORD' + Date.now().toString().slice(-8);
-    const totalBayar = p.price + ADMIN_FEE;
-    currentOrder = { pkg:p.amount, price:totalBayar, basePrice:p.price, adminFee:ADMIN_FEE, uid, zid, orderCode, docId:null };
+    const feeUsed = getEffectiveAdminFee();
+    const voucherUsed = feeUsed === 0;
+    const totalBayar = p.price + feeUsed;
+    currentOrder = { pkg:p.amount, price:totalBayar, basePrice:p.price, adminFee:feeUsed, uid, zid, orderCode, docId:null };
 
     document.getElementById('payUid').textContent = `${uid} (${zid})`;
     document.getElementById('payPkg').textContent = p.amount;
-    document.getElementById('payAdminFee').textContent = formatRupiah(ADMIN_FEE);
+    document.getElementById('payAdminFee').textContent = voucherUsed ? 'Rp 0 (Voucher aktif)' : formatRupiah(feeUsed);
     document.getElementById('payTotal').textContent = formatRupiah(totalBayar);
     document.getElementById('nominalInput').value = formatRupiah(totalBayar);
 
     const waMsg = encodeURIComponent(
-      `Halo, saya sudah bayar untuk pesanan:\nID Pesanan: ${orderCode}\nUser ID: ${uid} (${zid})\nPaket: ${p.amount}\nBiaya Admin: ${formatRupiah(ADMIN_FEE)}\nTotal: ${formatRupiah(totalBayar)}\n\nBerikut bukti transfernya:`
+      `Halo, saya sudah bayar untuk pesanan:\nID Pesanan: ${orderCode}\nUser ID: ${uid} (${zid})\nPaket: ${p.amount}\nBiaya Admin: ${voucherUsed ? 'Rp 0 (Voucher aktif)' : formatRupiah(feeUsed)}\nTotal: ${formatRupiah(totalBayar)}\n\nBerikut bukti transfernya:`
     );
     document.getElementById('waLink').href = `https://wa.me/${waNumber}?text=${waMsg}`;
 
@@ -2067,8 +2355,8 @@
 
     if(window.fbAddOrder){
       const docId = await window.fbAddOrder({
-        orderCode, pkg:p.amount, price:totalBayar, adminFee:ADMIN_FEE, uid, zid,
-        status:'pending', reason:null,
+        orderCode, pkg:p.amount, price:totalBayar, adminFee:feeUsed, uid, zid,
+        status:'pending', reason:null, voucherUsed,
         userId: currentUser.userId, userName: currentUser.name
       });
       if(currentOrder) currentOrder.docId = docId;
@@ -2080,16 +2368,17 @@
     showView('store');
   }
 
-  function copyNominal(){
+  function copyNominal(btn){
     if(!currentOrder) return;
-    navigator.clipboard.writeText(currentOrder.price.toString()).then(()=>{
-      const btn = event.target;
-      const old = btn.textContent;
-      btn.textContent = 'Tersalin';
-      setTimeout(()=> btn.textContent = old, 1500);
+    const text = currentOrder.price.toString();
+    copyTextToClipboard(text).then(()=>{
+      if(btn){
+        const old = btn.textContent;
+        btn.textContent = 'Tersalin';
+        setTimeout(()=> btn.textContent = old, 1500);
+      }
     }).catch(()=>{
-      const input = document.getElementById('nominalInput');
-      input.select(); document.execCommand('copy');
+      showCopyFallback(text);
     });
   }
 
@@ -2097,6 +2386,92 @@
     document.getElementById('statusBox').classList.add('show');
     document.getElementById('confirmBtn').disabled = true;
     document.getElementById('confirmBtn').textContent = 'Menunggu Verifikasi Admin...';
+  }
+
+  /* ---------- VOUCHER DISKON BIAYA ADMIN ---------- */
+  // Beli kode voucher: Rp 3.000, lewat alur pembayaran QRIS yang sama seperti
+  // top up. Setelah admin menyetujui pesanan ini, kode acak baru dibuatkan.
+  function buyVoucherCode(){
+    if(!currentUser){
+      pendingVoucherPurchase = true;
+      closeAccountModal();
+      openLoginModal();
+      return;
+    }
+    startVoucherCheckout();
+  }
+
+  async function startVoucherCheckout(){
+    const orderCode = 'VCR' + Date.now().toString().slice(-8);
+    currentOrder = {
+      type:'voucher', pkg:'Kode Voucher Diskon Admin', price:VOUCHER_PRICE, basePrice:VOUCHER_PRICE,
+      adminFee:0, uid:'-', zid:'-', orderCode, docId:null
+    };
+
+    document.getElementById('payUid').textContent = '—';
+    document.getElementById('payPkg').textContent = 'Kode Voucher Diskon Admin (gratis biaya admin 3 hari)';
+    document.getElementById('payAdminFee').textContent = 'Rp 0';
+    document.getElementById('payTotal').textContent = formatRupiah(VOUCHER_PRICE);
+    document.getElementById('nominalInput').value = formatRupiah(VOUCHER_PRICE);
+
+    const waMsg = encodeURIComponent(
+      `Halo, saya sudah bayar untuk pesanan Kode Voucher Diskon Admin:\nID Pesanan: ${orderCode}\nTotal: ${formatRupiah(VOUCHER_PRICE)}\n\nBerikut bukti transfernya:`
+    );
+    document.getElementById('waLink').href = `https://wa.me/${waNumber}?text=${waMsg}`;
+
+    document.getElementById('statusBox').classList.remove('show');
+    document.getElementById('confirmBtn').disabled = false;
+    document.getElementById('confirmBtn').textContent = 'Saya Sudah Bayar';
+
+    closeAccountModal();
+    showView('payment');
+    startTimer();
+
+    if(window.fbAddOrder){
+      const docId = await window.fbAddOrder({
+        orderCode, type:'voucher', pkg:'Kode Voucher Diskon Admin', price:VOUCHER_PRICE, adminFee:0,
+        uid:'-', zid:'-', status:'pending', reason:null,
+        userId: currentUser.userId, userName: currentUser.name
+      });
+      if(currentOrder) currentOrder.docId = docId;
+    }
+  }
+
+  // Pakai kode voucher — dicek ke server (Firestore) supaya tidak bisa dipakai
+  // dua kali. Kalau valid, aktifkan gratis biaya admin selama 3 hari di akun ini.
+  async function redeemVoucherCode(){
+    const input = document.getElementById('voucherRedeemInput');
+    const code = input.value.trim().toUpperCase();
+    if(!code){ toast('Masukkan kode voucher dulu.'); return; }
+    if(!currentUser){ toast('Masuk dulu untuk pakai kode voucher.'); return; }
+    if(!window.fbRedeemVoucherCode){
+      toast('Gagal terhubung ke server. Muat ulang halaman lalu coba lagi.');
+      return;
+    }
+    const result = await window.fbRedeemVoucherCode(code, currentUser.userId);
+    if(!result || !result.ok){
+      toast((result && result.message) || 'Kode voucher tidak valid.');
+      return;
+    }
+    currentUser.activeVoucher = { code, expiresAt: Date.now() + VOUCHER_DURATION_MS };
+    persistSession(currentUser);
+    input.value = '';
+    renderAccountVoucherStatus();
+    refreshPriceDisplays();
+    toast('Kode voucher berhasil dipakai! Biaya admin gratis selama 3 hari.');
+  }
+
+  function renderAccountVoucherStatus(){
+    const el = document.getElementById('voucherStatusText');
+    if(!el) return;
+    const v = getActiveVoucherInfo();
+    if(!v){
+      el.innerHTML = 'Belum ada voucher aktif. Beli kode untuk gratis biaya admin selama 3 hari di setiap pembelian.';
+      return;
+    }
+    const sisaMs = v.expiresAt - Date.now();
+    const sisaJam = Math.max(1, Math.ceil(sisaMs / (60*60*1000)));
+    el.innerHTML = `Voucher <b>${escapeHtml(v.code)}</b> sedang aktif — biaya admin gratis, sisa waktu sekitar ${sisaJam} jam lagi.`;
   }
 
   function startTimer(){
@@ -2464,6 +2839,13 @@
     }
   }
 
+  // CTA khusus slide iklan Voucher Diskon Admin — langsung lanjut ke alur beli
+  // kode voucher (kalau belum login, buyVoucherCode() akan minta login dulu).
+  function closeAdAndBuyVoucher(){
+    closeAdModal();
+    setTimeout(() => { buyVoucherCode(); }, 300);
+  }
+
   function initAdModal(){
     createAdDots();
     
@@ -2500,8 +2882,53 @@
     });
   }
 
-  /* ---------- OFFLINE LOCK: deteksi koneksi internet ---------- */
+  /* ---------- KONEKSI: deteksi status online/offline yang ASLI, bukan cuma navigator.onLine ----------
+     navigator.onLine cuma bilang "kartu jaringan nyambung ke wifi/data", padahal wifi bisa nyambung
+     tapi internetnya mati (captive portal, kuota habis, router bermasalah, dll). Supaya statusnya
+     bener-bener akurat, kita gabungkan dua sinyal:
+     1) navigator.onLine + event 'online'/'offline' bawaan browser -> sinyal cepat, langsung reaktif.
+     2) Ping asli (fetch) ke beberapa endpoint publik yang stabil di seluruh dunia (termasuk Indonesia)
+        -> baru dipercaya kalau request-nya beneran nyampe/gagal karena jaringan, bukan sekadar
+           dugaan dari OS. Kalau salah satu endpoint berhasil dihubungi, internet dianggap hidup. */
   let isAppOnline = true;
+  let connCheckTimer = null;
+  let connCheckBusy = false;
+
+  // Endpoint-endpoint kecil & ringan yang biasa dipakai OS/browser untuk cek konektivitas asli
+  // (Google connectivity-check & Cloudflare trace) — bisa diakses dari server negara mana pun,
+  // termasuk dari Indonesia, jadi cocok dipakai lintas lokasi/lintas provider.
+  const CONNECTIVITY_PROBES = [
+    'https://www.gstatic.com/generate_204',
+    'https://cloudflare.com/cdn-cgi/trace',
+    'https://www.google.com/favicon.ico'
+  ];
+
+  function pingProbe(url, timeoutMs){
+    return new Promise((resolve)=>{
+      const controller = new AbortController();
+      const timer = setTimeout(()=>{ controller.abort(); resolve(false); }, timeoutMs);
+      fetch(url, { mode:'no-cors', cache:'no-store', signal:controller.signal })
+        .then(()=>{ clearTimeout(timer); resolve(true); })
+        .catch(()=>{ clearTimeout(timer); resolve(false); });
+    });
+  }
+
+  // Baru dianggap online kalau MINIMAL SATU probe beneran berhasil dihubungi.
+  async function checkRealConnectivity(){
+    if(!navigator.onLine) return false; // interface jaringan sendiri sudah mati, gak perlu probe lagi
+    const results = await Promise.all(CONNECTIVITY_PROBES.map(u => pingProbe(u, 4500)));
+    return results.some(ok => ok);
+  }
+
+  function setNetBadge(state){ // state: 'online' | 'offline' | 'checking'
+    const wrap = document.getElementById('netStatus');
+    const txt = document.getElementById('netStatusText');
+    if(!wrap || !txt) return;
+    wrap.classList.remove('offline', 'checking');
+    if(state === 'online'){ txt.textContent = 'Online'; }
+    else if(state === 'offline'){ wrap.classList.add('offline'); txt.textContent = 'Offline'; }
+    else { wrap.classList.add('checking'); txt.textContent = 'Mengecek...'; }
+  }
 
   function showOfflineLock(){
     document.getElementById('offlineLock').classList.add('open');
@@ -2513,12 +2940,16 @@
     document.body.style.overflow = '';
   }
 
-  // Pakai status koneksi asli dari sistem (navigator.onLine) — ini yang paling akurat
-  // dan aman dipakai di semua kondisi (file lokal, WebView APK, browser biasa),
-  // beda dengan fetch ke server luar yang kadang diblokir walau internetnya nyala.
-  function refreshConnectionState(){
+  async function refreshConnectionState(showChecking){
+    if(connCheckBusy) return; // hindari tumpang tindih kalau beberapa trigger nembak bersamaan
+    connCheckBusy = true;
     const statusEl = document.getElementById('offlineStatusText');
-    const online = navigator.onLine;
+    if(showChecking){
+      setNetBadge('checking');
+      if(statusEl) statusEl.innerHTML = '<span class="offline-dot"></span>Mengecek koneksi...';
+    }
+    const online = await checkRealConnectivity();
+    setNetBadge(online ? 'online' : 'offline');
     if(online && !isAppOnline){
       isAppOnline = true;
       hideOfflineLock();
@@ -2528,24 +2959,143 @@
     } else if(!online && statusEl){
       statusEl.innerHTML = '<span class="offline-dot"></span>Masih belum ada koneksi...';
     }
+    connCheckBusy = false;
   }
 
   function checkConnectionNow(){
-    const statusEl = document.getElementById('offlineStatusText');
-    if(statusEl) statusEl.innerHTML = '<span class="offline-dot"></span>Mengecek koneksi...';
-    setTimeout(refreshConnectionState, 400);
+    refreshConnectionState(true);
+  }
+
+  // Loop pengecekan berkala di latar belakang: lebih sering saat offline (biar cepat pulih
+  // begitu internet balik), lebih jarang saat online (hemat kuota/baterai).
+  function scheduleConnLoop(){
+    clearTimeout(connCheckTimer);
+    const interval = isAppOnline ? 20000 : 5000;
+    connCheckTimer = setTimeout(async ()=>{
+      await refreshConnectionState(false);
+      scheduleConnLoop();
+    }, interval);
   }
 
   function initOfflineLock(){
-    // Cek pertama kali begitu app dibuka
-    isAppOnline = navigator.onLine;
-    if(!isAppOnline){
+    isAppOnline = true; // asumsi awal online, langsung dikoreksi oleh pengecekan asli di bawah
+    refreshConnectionState(true).then(scheduleConnLoop);
+
+    // Event bawaan browser/WebView untuk online-offline — dipakai sebagai pemicu cepat,
+    // tapi tetap dikonfirmasi ulang lewat ping asli supaya tidak salah deteksi.
+    window.addEventListener('online', ()=>refreshConnectionState(true));
+    window.addEventListener('offline', ()=>{
+      isAppOnline = false;
+      setNetBadge('offline');
       showOfflineLock();
+    });
+
+    // Saat tab/app dibuka kembali dari background, langsung cek ulang statusnya.
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState === 'visible') refreshConnectionState(true);
+    });
+  }
+
+  /* ---------- TOMBOL BANTUAN: geser bebas lalu nempel ke tepi (spt chat bubble) ---------- */
+  function initHelpFabDrag(){
+    const fab = document.getElementById('helpFab');
+    if(!fab) return;
+
+    const MARGIN = 12;
+    const DRAG_THRESHOLD = 6;
+    const STORAGE_KEY = 'helpFabPos';
+    let dragging = false, moved = false;
+    let startX = 0, startY = 0, origLeft = 0, origTop = 0;
+
+    function getVerticalBounds(){
+      const topNav = document.querySelector('nav.top-nav');
+      const bottomNav = document.querySelector('.bottom-nav');
+      const topLimit = (topNav ? topNav.getBoundingClientRect().bottom : 0) + MARGIN;
+      const bottomNavH = bottomNav ? bottomNav.getBoundingClientRect().height : 0;
+      const bottomLimit = window.innerHeight - bottomNavH - MARGIN;
+      return { topLimit, bottomLimit };
     }
 
-    // Event bawaan browser/WebView untuk online-offline — langsung reaktif, tanpa delay
-    window.addEventListener('online', refreshConnectionState);
-    window.addEventListener('offline', refreshConnectionState);
+    function clampPos(left, top){
+      const { topLimit, bottomLimit } = getVerticalBounds();
+      const w = fab.offsetWidth, h = fab.offsetHeight;
+      const maxLeft = Math.max(MARGIN, window.innerWidth - w - MARGIN);
+      const maxTop = Math.max(topLimit, bottomLimit - h);
+      left = Math.min(Math.max(left, MARGIN), maxLeft);
+      top = Math.min(Math.max(top, topLimit), maxTop);
+      return { left, top };
+    }
+
+    function setPos(left, top, persist){
+      const p = clampPos(left, top);
+      fab.style.left = p.left + 'px';
+      fab.style.top = p.top + 'px';
+      fab.style.right = 'auto';
+      fab.style.bottom = 'auto';
+      if(persist){
+        try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){}
+      }
+      return p;
+    }
+
+    function snapToNearestEdge(){
+      const rect = fab.getBoundingClientRect();
+      const center = rect.left + rect.width / 2;
+      const goLeft = center < window.innerWidth / 2;
+      const targetLeft = goLeft ? MARGIN : window.innerWidth - rect.width - MARGIN;
+      setPos(targetLeft, rect.top, true);
+    }
+
+    function restorePos(){
+      let saved = null;
+      try{ saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); }catch(e){}
+      if(saved && typeof saved.left === 'number' && typeof saved.top === 'number'){
+        setPos(saved.left, saved.top, false);
+      } else {
+        const rect = fab.getBoundingClientRect();
+        const left = window.innerWidth - rect.width - 16;
+        const top = window.innerHeight - rect.height - 88;
+        setPos(left, top, false);
+      }
+    }
+
+    fab.addEventListener('pointerdown', (e)=>{
+      dragging = true; moved = false;
+      fab.classList.add('dragging');
+      try{ fab.setPointerCapture(e.pointerId); }catch(err){}
+      const rect = fab.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY;
+      origLeft = rect.left; origTop = rect.top;
+    });
+
+    fab.addEventListener('pointermove', (e)=>{
+      if(!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if(!moved && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) moved = true;
+      if(moved) setPos(origLeft + dx, origTop + dy, false);
+    });
+
+    function endDrag(){
+      if(!dragging) return;
+      dragging = false;
+      fab.classList.remove('dragging');
+      if(moved) snapToNearestEdge();
+    }
+    fab.addEventListener('pointerup', endDrag);
+    fab.addEventListener('pointercancel', endDrag);
+
+    fab.addEventListener('click', ()=>{
+      if(moved){ moved = false; return; } // habis digeser, jangan buka chat
+      openHelpChat();
+    });
+
+    window.addEventListener('resize', ()=>{
+      const rect = fab.getBoundingClientRect();
+      setPos(rect.left, rect.top, false);
+    });
+
+    restorePos();
   }
 
   restoreSession();
@@ -2555,6 +3105,7 @@
   initStatCounters();
   initAdModal();
   initOfflineLock();
+  initHelpFabDrag();
 </script>
 
 </body>
