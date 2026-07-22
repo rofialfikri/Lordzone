@@ -109,6 +109,136 @@
   }
   .btn-guest:hover{border-color:var(--gold-dim); color:var(--gold);}
 
+  /* ---------- ADVERTISEMENT POPUP ---------- */
+  .ad-modal-overlay{
+    position:fixed; inset:0; background:rgba(6,9,17,0.8); backdrop-filter:blur(5px);
+    display:none; align-items:center; justify-content:center; z-index:95; padding:20px;
+    animation:fadeInOverlay 0.4s ease-out;
+  }
+  .ad-modal-overlay.open{display:flex;}
+  @keyframes fadeInOverlay{from{opacity:0;}to{opacity:1;}}
+  
+  .ad-modal-container{
+    width:100%; max-width:480px; position:relative;
+    animation:slideUpAd 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes slideUpAd{
+    from{transform:translateY(60px) scale(0.92); opacity:0;}
+    to{transform:translateY(0) scale(1); opacity:1;}
+  }
+  
+  .ad-carousel{
+    position:relative; overflow:hidden; border-radius:12px;
+    box-shadow:0 30px 60px -16px rgba(79,217,232,0.3);
+  }
+  
+  .ad-slides{
+    display:flex; transition:transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .ad-slide{
+    min-width:100%; background:linear-gradient(135deg, rgba(79,217,232,0.15) 0%, rgba(227,179,65,0.1) 100%);
+    border:2px solid var(--line); padding:32px 24px; text-align:center; position:relative;
+    overflow:hidden;
+  }
+  
+  .ad-slide::before{
+    content:''; position:absolute; inset:0; background:
+      radial-gradient(circle at 20% 30%, rgba(79,217,232,0.2), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(227,179,65,0.15), transparent 40%);
+    pointer-events:none;
+  }
+  
+  .ad-slide > *{position:relative; z-index:2;}
+  
+  .ad-badge{
+    display:inline-block; background:var(--gold); color:#0A0E1A; 
+    font-weight:700; font-size:12px; padding:6px 14px; border-radius:20px;
+    letter-spacing:0.05em; text-transform:uppercase; margin-bottom:16px;
+    box-shadow:0 4px 12px rgba(227,179,65,0.3);
+    animation:pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse{
+    0%, 100%{opacity:1;}
+    50%{opacity:0.7;}
+  }
+  
+  .ad-title{
+    font-family:'Rajdhani'; font-weight:700; font-size:28px; color:var(--cyan);
+    margin:12px 0; text-shadow:0 0 20px rgba(79,217,232,0.3);
+    text-transform:uppercase; letter-spacing:0.02em;
+  }
+  
+  .ad-price{
+    font-size:32px; font-weight:800; color:var(--gold); margin:16px 0;
+    font-family:'Rajdhani'; text-shadow:0 0 15px rgba(227,179,65,0.4);
+  }
+  
+  .ad-desc{
+    font-size:13.5px; color:var(--text-dim); margin:12px 0 20px;
+    line-height:1.5;
+  }
+  
+  .ad-perks{
+    text-align:left; background:rgba(10,14,26,0.6); border-left:3px solid var(--cyan);
+    padding:12px 16px; border-radius:4px; margin:16px 0; font-size:12px;
+    list-style:none;
+  }
+  
+  .ad-perks li{
+    margin:6px 0; color:var(--text-dim);
+  }
+  
+  .ad-perks li::before{
+    content:'✓ '; color:var(--ok); font-weight:700; margin-right:8px;
+  }
+  
+  .ad-btn-cta{
+    background:linear-gradient(135deg, var(--gold), #F4D371);
+    color:#0A0E1A; font-weight:700; font-size:15px; padding:14px 32px;
+    border:none; border-radius:6px; cursor:pointer; font-family:inherit;
+    letter-spacing:0.02em; text-transform:uppercase;
+    box-shadow:0 8px 24px rgba(227,179,65,0.35);
+    transition:all 0.3s ease;
+  }
+  
+  .ad-btn-cta:hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 32px rgba(227,179,65,0.45);
+  }
+  
+  .ad-btn-cta:active{
+    transform:translateY(0);
+  }
+  
+  .ad-dots{
+    display:flex; gap:8px; justify-content:center; margin-top:20px;
+  }
+  
+  .ad-dot{
+    width:8px; height:8px; border-radius:50%; background:var(--line);
+    cursor:pointer; transition:all 0.3s ease;
+  }
+  
+  .ad-dot.active{
+    background:var(--gold); width:24px; border-radius:4px;
+    box-shadow:0 0 12px rgba(227,179,65,0.4);
+  }
+  
+  .ad-close-btn{
+    position:absolute; top:12px; right:12px; background:rgba(10,14,26,0.9);
+    border:1px solid var(--line); color:var(--text-dim); width:32px; height:32px;
+    border-radius:50%; cursor:pointer; display:flex; align-items:center;
+    justify-content:center; font-size:18px; font-weight:bold;
+    z-index:10; transition:all 0.2s ease;
+  }
+  
+  .ad-close-btn:hover{
+    border-color:var(--danger); color:var(--danger);
+    background:rgba(255,93,108,0.1);
+  }
+
   /* ---------- ORDERS VIEW ---------- */
   .orders-wrap{min-height:100vh; padding:40px 16px;}
   .orders-inner{max-width:640px; margin:0 auto;}
@@ -466,6 +596,75 @@
 </head>
 <body>
 
+<!-- ============== ADVERTISEMENT MODAL ============== -->
+<div class="ad-modal-overlay" id="adModal">
+  <div class="ad-modal-container">
+    <button class="ad-close-btn" id="adCloseBtn">✕</button>
+    <div class="ad-carousel">
+      <div class="ad-slides" id="adSlides">
+        <!-- Slide 1 -->
+        <div class="ad-slide">
+          <div class="ad-badge">🎁 Penawaran Spesial!</div>
+          <div class="ad-title">250 Diamond</div>
+          <div class="ad-price">Rp 29.999</div>
+          <div class="ad-desc">Paket terjangkau untuk pemula yang mau mulai koleksi hero favorit!</div>
+          <ul class="ad-perks">
+            <li>Instant delivery</li>
+            <li>Aman terpercaya</li>
+            <li>Admin siap 24/7</li>
+          </ul>
+          <button class="ad-btn-cta" onclick="closeAdAndTopup()">Pesan Sekarang</button>
+        </div>
+        
+        <!-- Slide 2 -->
+        <div class="ad-slide">
+          <div class="ad-badge">⭐ Paling Populer!</div>
+          <div class="ad-title">500 Diamond</div>
+          <div class="ad-price">Rp 49.999</div>
+          <div class="ad-desc">Paket best-seller! Beli skin legendary atau buat skin gratis berkali-kali</div>
+          <ul class="ad-perks">
+            <li>Hemat 20% dari satuan</li>
+            <li>Proses cepat 5 menit</li>
+            <li>Bisa cicil pakai e-wallet</li>
+          </ul>
+          <button class="ad-btn-cta" onclick="closeAdAndTopup()">Pesan Sekarang</button>
+        </div>
+        
+        <!-- Slide 3 -->
+        <div class="ad-slide">
+          <div class="ad-badge">💎 Premium Bundle!</div>
+          <div class="ad-title">1200 Diamond</div>
+          <div class="ad-price">Rp 99.999</div>
+          <div class="ad-desc">Bundling hemat untuk yang suka koleksi skin dan hero sekaligus!</div>
+          <ul class="ad-perks">
+            <li>Hemat 30% dari satuan</li>
+            <li>Bonus voucher skin</li>
+            <li>FREE bonus diamond 50</li>
+          </ul>
+          <button class="ad-btn-cta" onclick="closeAdAndTopup()">Pesan Sekarang</button>
+        </div>
+        
+        <!-- Slide 4 -->
+        <div class="ad-slide">
+          <div class="ad-badge">🔥 SUPER HEMAT!</div>
+          <div class="ad-title">2500 Diamond</div>
+          <div class="ad-price">Rp 199.999</div>
+          <div class="ad-desc">Paket terbesar dengan hemat paling banyak! Cocok untuk hardcore players</div>
+          <ul class="ad-perks">
+            <li>Hemat 40% dari satuan</li>
+            <li>Bonus diamond 200</li>
+            <li>Gratis konsultasi hero build</li>
+          </ul>
+          <button class="ad-btn-cta" onclick="closeAdAndTopup()">Pesan Sekarang</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Dots Navigator -->
+    <div class="ad-dots" id="adDots"></div>
+  </div>
+</div>
+
 <!-- ============== MAINTENANCE LOCK (mode pembaruan) ============== -->
 <div id="maintenanceLock">
   <div class="maint-card" id="maintenanceCard">
@@ -510,7 +709,7 @@
           <a href="#cara" class="btn-ghost">Lihat Cara Order</a>
         </div>
         <div class="hero-stats">
-          <div><b>128rb+</b><span>Transaksi Sukses</span></div>
+          <div><b id="statTransaksi" data-target="128" data-suffix="rb+">0</b><span>Transaksi Sukses</span></div>
           <div><b>&lt;2 Menit</b><span>Rata-rata Proses</span></div>
           <div><b>4.9/5</b><span>Rating Pembeli</span></div>
         </div>
@@ -2047,10 +2246,122 @@
     }, 450);
   }
 
+  /* ---------- ANIMASI HITUNG NAIK (statistik hero) ---------- */
+  function animateStatCounter(el, duration){
+    if(!el) return;
+    const target = parseFloat(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    if(isNaN(target)) return;
+    duration = duration || 3400; // lebih lama supaya gerakannya kerasa natural, tidak buru-buru
+    const start = performance.now();
+    function tick(now){
+      const progress = Math.min((now - start) / duration, 1);
+      // easeOutExpo: cepat di awal lalu melambat drastis mendekati akhir,
+      // mirip gerakan counter/odometer asli — bukan naik rata terus berhenti mendadak.
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = Math.floor(eased * target);
+      el.textContent = current + suffix;
+      if(progress < 1){
+        requestAnimationFrame(tick);
+      } else {
+        el.textContent = target + suffix;
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function initStatCounters(){
+    document.querySelectorAll('[data-target]').forEach(el=>{
+      animateStatCounter(el);
+    });
+  }
+
+  /* ---------- ADVERTISEMENT MODAL LOGIC ---------- */
+  let currentAdSlide = 0;
+  const adSlides = document.querySelectorAll('.ad-slide');
+  const totalAdSlides = adSlides.length;
+
+  function createAdDots(){
+    const dotsContainer = document.getElementById('adDots');
+    for(let i = 0; i < totalAdSlides; i++){
+      const dot = document.createElement('button');
+      dot.className = 'ad-dot' + (i === 0 ? ' active' : '');
+      dot.onclick = () => goToAdSlide(i);
+      dotsContainer.appendChild(dot);
+    }
+  }
+
+  function goToAdSlide(n){
+    currentAdSlide = n % totalAdSlides;
+    const offset = -currentAdSlide * 100;
+    document.getElementById('adSlides').style.transform = `translateX(${offset}%)`;
+    
+    document.querySelectorAll('.ad-dot').forEach((dot, i) => {
+      dot.classList.toggle('active', i === currentAdSlide);
+    });
+  }
+
+  function nextAdSlide(){
+    goToAdSlide(currentAdSlide + 1);
+  }
+
+  function showAdModal(){
+    const modal = document.getElementById('adModal');
+    modal.classList.add('open');
+  }
+
+  function closeAdModal(){
+    const modal = document.getElementById('adModal');
+    modal.classList.remove('open');
+    localStorage.setItem('adModalShown', 'true');
+  }
+
+  function closeAdAndTopup(){
+    closeAdModal();
+    // Scroll ke section top up / form pemesanan
+    const topupSection = document.querySelector('[data-view="form"]') || document.querySelector('.wrap');
+    if(topupSection){
+      setTimeout(() => {
+        topupSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    }
+  }
+
+  function initAdModal(){
+    createAdDots();
+    
+    // Cek apakah ad sudah pernah ditampilkan di sesi ini
+    const adShown = localStorage.getItem('adModalShown');
+    if(!adShown){
+      setTimeout(() => {
+        showAdModal();
+      }, 600); // Delay 600ms agar tidak langsung popup saat loading
+    }
+    
+    // Event listeners
+    document.getElementById('adCloseBtn').addEventListener('click', closeAdModal);
+    
+    // Auto slide setiap 8 detik
+    setInterval(() => {
+      if(document.getElementById('adModal').classList.contains('open')){
+        nextAdSlide();
+      }
+    }, 8000);
+    
+    // Click di luar modal untuk close
+    document.getElementById('adModal').addEventListener('click', (e) => {
+      if(e.target.id === 'adModal'){
+        closeAdModal();
+      }
+    });
+  }
+
   restoreSession();
   render();
   renderAuthArea();
   initMaintenanceWatch();
+  initStatCounters();
+  initAdModal();
 </script>
 
 </body>
