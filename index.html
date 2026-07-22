@@ -2,7 +2,10 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0A0E1A">
 <title>LORDSHOP — Top Up Diamond Mobile Legends</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,15 +24,18 @@
     --danger:#FF5D6C;
     --ok:#5FE0A0;
   }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  html{scroll-behavior:smooth;}
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html{scroll-behavior:smooth; overscroll-behavior:none; height:100%;}
+  html, body{ touch-action:pan-y; overscroll-behavior-y:none; }
   body{
     background:var(--bg-void); color:var(--text); font-family:'Plus Jakarta Sans', sans-serif;
-    overflow-x:hidden; padding-bottom:78px;
+    overflow-x:hidden; padding-bottom:78px; min-height:100%;
+    -webkit-user-select:none; user-select:none;
     background-image:
       radial-gradient(circle at 15% 8%, rgba(79,217,232,0.08), transparent 40%),
       radial-gradient(circle at 85% 0%, rgba(227,179,65,0.08), transparent 45%);
   }
+  input, textarea{ -webkit-user-select:text; user-select:text; }
   h1,h2,h3, .display{ font-family:'Rajdhani', sans-serif; text-transform:uppercase; letter-spacing:0.03em; }
   a{color:inherit; text-decoration:none;}
   ::selection{background:var(--gold); color:#0A0E1A;}
@@ -51,6 +57,25 @@
   .nav-links{display:flex; gap:32px; font-size:14px; color:var(--text-dim); font-weight:500;}
   .nav-links a:hover{color:var(--gold);}
   .nav-cta{ background:var(--gold); color:#0A0E1A; font-weight:700; font-size:14px; padding:10px 20px; border-radius:3px; letter-spacing:0.02em; cursor:pointer; border:none; font-family:inherit;}
+  .btn-apk-nav{
+    display:flex; align-items:center; gap:6px; background:none; border:1px solid var(--line); color:var(--text);
+    font-weight:600; font-size:13px; padding:9px 14px; border-radius:3px; cursor:pointer; font-family:inherit;
+  }
+  .btn-apk-nav:hover{border-color:var(--cyan); color:var(--cyan);}
+  @media (max-width:520px){ .btn-apk-nav .apk-nav-label{display:none;} }
+
+  .btn-apk{
+    display:inline-flex; align-items:center; gap:10px; background:var(--bg-panel-2); border:1px solid var(--gold-dim);
+    color:var(--text); font-weight:700; font-size:14.5px; padding:13px 22px; border-radius:6px; cursor:pointer;
+    font-family:inherit; transition:border-color .2s ease, transform .15s ease;
+  }
+  .btn-apk:hover{border-color:var(--gold); transform:translateY(-2px);}
+  .btn-apk .apk-ico{
+    width:30px; height:30px; border-radius:7px; background:linear-gradient(135deg, var(--cyan), var(--gold));
+    display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; color:#0A0E1A;
+  }
+  .btn-apk .apk-text{display:flex; flex-direction:column; align-items:flex-start; line-height:1.25;}
+  .btn-apk .apk-text small{font-size:11px; color:var(--text-dim); font-weight:500; text-transform:none; letter-spacing:0;}
   .nav-mobile-hide{display:flex;}
   @media (max-width:760px){ .nav-mobile-hide{display:none;} }
   .nav-right{display:flex; align-items:center; gap:12px;}
@@ -109,7 +134,27 @@
   }
   .btn-guest:hover{border-color:var(--gold-dim); color:var(--gold);}
 
-  /* ---------- ADVERTISEMENT POPUP ---------- */
+  /* ---------- OFFLINE LOCK (kunci otomatis saat tidak ada internet) ---------- */
+  #offlineLock{
+    position:fixed; inset:0; z-index:999; background:var(--bg-void);
+    display:none; align-items:center; justify-content:center; flex-direction:column;
+    text-align:center; padding:32px; gap:6px;
+  }
+  #offlineLock.open{display:flex;}
+  .offline-icon{
+    width:64px; height:64px; border-radius:50%; background:rgba(255,93,108,0.12);
+    border:2px solid var(--danger); display:flex; align-items:center; justify-content:center;
+    font-size:28px; margin-bottom:18px; animation:offlinePulse 1.8s ease-in-out infinite;
+  }
+  @keyframes offlinePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,93,108,0.35);} 50%{box-shadow:0 0 0 14px rgba(255,93,108,0);}}
+  #offlineLock h2{font-size:20px; color:var(--text);}
+  #offlineLock p{font-size:13.5px; color:var(--text-dim); max-width:280px; line-height:1.5; margin-top:6px;}
+  .offline-retry{
+    margin-top:22px; background:var(--gold); color:#0A0E1A; font-weight:700; font-size:14px;
+    padding:12px 28px; border-radius:6px; border:none; cursor:pointer; font-family:inherit;
+  }
+  .offline-dot{width:8px; height:8px; border-radius:50%; background:var(--danger); display:inline-block; margin-right:6px; vertical-align:middle;}
+  #offlineLock .offline-status{font-size:12px; color:var(--text-dim); margin-top:16px; letter-spacing:0.03em; text-transform:uppercase;}
   .ad-modal-overlay{
     position:fixed; inset:0; background:rgba(6,9,17,0.8); backdrop-filter:blur(5px);
     display:none; align-items:center; justify-content:center; z-index:95; padding:20px;
@@ -601,6 +646,15 @@
 </head>
 <body>
 
+<!-- ============== OFFLINE LOCK (kunci saat tidak ada internet) ============== -->
+<div id="offlineLock">
+  <div class="offline-icon">📡</div>
+  <h2>Tidak Ada Koneksi Internet</h2>
+  <p>Aplikasi ini butuh koneksi internet aktif untuk digunakan. Silakan cek jaringan WiFi/data seluler kamu.</p>
+  <button class="offline-retry" onclick="checkConnectionNow()">Coba Lagi</button>
+  <div class="offline-status" id="offlineStatusText"><span class="offline-dot"></span>Menunggu koneksi...</div>
+</div>
+
 <!-- ============== ADVERTISEMENT MODAL ============== -->
 <div class="ad-modal-overlay" id="adModal">
   <div class="ad-modal-container">
@@ -697,6 +751,9 @@
       </div>
       <div class="nav-right">
         <div id="authArea"></div>
+        <a href="lordshop.apk" download="LORDSHOP.apk" class="btn-apk-nav" title="Download App Android (.apk)">
+          <span>⬇</span><span class="apk-nav-label">Download App</span>
+        </a>
         <a href="#topup" class="nav-cta">Isi Diamond</a>
       </div>
     </div>
@@ -712,6 +769,12 @@
         <div class="hero-actions">
           <a href="#topup" class="btn-primary">Mulai Top Up</a>
           <a href="#cara" class="btn-ghost">Lihat Cara Order</a>
+        </div>
+        <div style="margin-top:16px;">
+          <a href="lordshop.apk" download="LORDSHOP.apk" class="btn-apk">
+            <span class="apk-ico">⬇</span>
+            <span class="apk-text">Download App Android<small>File .apk · ~15 MB · Tanpa Play Store</small></span>
+          </a>
         </div>
         <div class="hero-stats">
           <div><b id="statTransaksi" data-target="128" data-suffix="rb+">0</b><span>Transaksi Sukses</span></div>
@@ -2437,12 +2500,61 @@
     });
   }
 
+  /* ---------- OFFLINE LOCK: deteksi koneksi internet ---------- */
+  let isAppOnline = true;
+
+  function showOfflineLock(){
+    document.getElementById('offlineLock').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideOfflineLock(){
+    document.getElementById('offlineLock').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // Pakai status koneksi asli dari sistem (navigator.onLine) — ini yang paling akurat
+  // dan aman dipakai di semua kondisi (file lokal, WebView APK, browser biasa),
+  // beda dengan fetch ke server luar yang kadang diblokir walau internetnya nyala.
+  function refreshConnectionState(){
+    const statusEl = document.getElementById('offlineStatusText');
+    const online = navigator.onLine;
+    if(online && !isAppOnline){
+      isAppOnline = true;
+      hideOfflineLock();
+    } else if(!online && isAppOnline){
+      isAppOnline = false;
+      showOfflineLock();
+    } else if(!online && statusEl){
+      statusEl.innerHTML = '<span class="offline-dot"></span>Masih belum ada koneksi...';
+    }
+  }
+
+  function checkConnectionNow(){
+    const statusEl = document.getElementById('offlineStatusText');
+    if(statusEl) statusEl.innerHTML = '<span class="offline-dot"></span>Mengecek koneksi...';
+    setTimeout(refreshConnectionState, 400);
+  }
+
+  function initOfflineLock(){
+    // Cek pertama kali begitu app dibuka
+    isAppOnline = navigator.onLine;
+    if(!isAppOnline){
+      showOfflineLock();
+    }
+
+    // Event bawaan browser/WebView untuk online-offline — langsung reaktif, tanpa delay
+    window.addEventListener('online', refreshConnectionState);
+    window.addEventListener('offline', refreshConnectionState);
+  }
+
   restoreSession();
   render();
   renderAuthArea();
   initMaintenanceWatch();
   initStatCounters();
   initAdModal();
+  initOfflineLock();
 </script>
 
 </body>
