@@ -477,6 +477,11 @@
     font-size:14.5px; cursor:pointer; letter-spacing:0.02em; font-family:inherit;
   }
   .order-bar button:disabled{background:var(--line); color:var(--text-dim); cursor:not-allowed;}
+  .order-bar-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .order-bar .btn-cancel-pkg{
+    background:none; border:1px solid var(--line); color:var(--text-dim); font-weight:600;
+  }
+  .order-bar .btn-cancel-pkg:hover{border-color:var(--danger); color:var(--danger);}
 
   /* ---------- TRUST ---------- */
   .trust{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
@@ -747,15 +752,18 @@
 
         <div id="orderDetails" style="display:none; margin-top:24px;">
           <div class="id-form" style="grid-template-columns:1fr 1fr;">
-            <div class="field"><label for="uid">User ID</label><input id="uid" type="text" inputmode="numeric" placeholder="Contoh: 123456789"></div>
-            <div class="field"><label for="zid">Zone ID</label><input id="zid" type="text" inputmode="numeric" placeholder="Contoh: 1234"></div>
+            <div class="field"><label for="uid">User ID</label><input id="uid" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="20" placeholder="Contoh: 123456789"></div>
+            <div class="field"><label for="zid">Zone ID</label><input id="zid" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="Contoh: 1234"></div>
           </div>
         </div>
 
         <div class="order-bar" id="orderBar" style="display:none;">
           <div class="info">Dipilih: <b id="sumPkgBar">Belum ada paket dipilih</b></div>
           <div class="info">Total Bayar <span style="font-size:11px;">(sudah termasuk biaya admin Rp 100)</span>: <b id="sumPriceBar">Rp 0</b></div>
-          <button id="orderBtn" disabled onclick="goToPayment()">Pesan Sekarang</button>
+          <div class="order-bar-actions">
+            <button type="button" class="btn-cancel-pkg" onclick="cancelPkgSelection()">Batalkan</button>
+            <button id="orderBtn" disabled onclick="goToPayment()">Pesan Sekarang</button>
+          </div>
         </div>
       </div>
     </section>
@@ -776,7 +784,7 @@
     <div class="wrap">
       <div class="logo"><span class="gem"></span>LORDSHOP</div>
       <p>© 2026 LordShop. Situs demo — bukan platform pembayaran resmi.</p>
-      <button onclick="openAdmin()" style="background:none; border:none; color:var(--text-dim); font-size:12px; cursor:pointer; font-family:inherit; text-decoration:underline;">Admin</button>
+      <button id="footerAdminBtn" onclick="openAdmin()" style="background:none; border:none; color:var(--text-dim); font-size:12px; cursor:pointer; font-family:inherit; text-decoration:underline; position:relative; z-index:600;">Admin</button>
     </div>
   </footer>
 </div>
@@ -1172,6 +1180,18 @@
   let selected = null;
   let currentOrder = null; // { pkg, price, uid, zid, orderCode, docId }
   let timerId = null;
+  /* ---------- KEAMANAN: escape HTML ----------
+     Data seperti nama akun, User ID, Zone ID, dan alasan gagal berasal dari
+     input pengguna dan disimpan ke Firestore. Kalau dirender langsung lewat
+     innerHTML tanpa di-escape, pengguna nakal bisa menyisipkan tag/skrip
+     (XSS tersimpan) yang bisa jalan di browser pembeli lain ATAU di panel
+     Admin. Semua data semacam ini WAJIB lewat escapeHtml() sebelum dirender. */
+  function escapeHtml(value){
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[ch]));
+  }
+
   let currentUser = null; // { type:'google'|'guest', name, email, picture, userId }
   let pendingCheckout = false;
 
@@ -1282,14 +1302,14 @@
       el.innerHTML = `<button class="btn-login" onclick="openLoginModal()">Masuk</button>`;
       return;
     }
-    const initials = currentUser.name.trim().slice(0,2).toUpperCase();
+    const initials = escapeHtml(currentUser.name.trim().slice(0,2).toUpperCase());
     const avatar = currentUser.picture
-      ? `<img src="${currentUser.picture}" alt="">`
+      ? `<img src="${escapeHtml(currentUser.picture)}" alt="">`
       : initials;
     el.innerHTML = `
       <div class="user-chip" onclick="toggleUserMenu(event)">
         <div class="user-avatar">${avatar}</div>
-        <span class="user-name">${currentUser.name}</span>
+        <span class="user-name">${escapeHtml(currentUser.name)}</span>
         <div class="user-menu" id="userMenu">
           <div class="badge-role">${currentUser.type === 'google' ? 'Akun Google' : 'Akun Tamu'}</div>
           <button onclick="openOrders()">Pesanan Saya</button>
@@ -1447,8 +1467,8 @@
         <div class="oi-left">
           <div class="gem-icon"></div>
           <div>
-            <div class="oi-title">${o.pkg}</div>
-            <div class="oi-sub">${o.orderCode} · ${formatRupiah(o.price)} · ID ${o.uid} (${o.zid})${o.reason ? ' · ' + o.reason : ''}</div>
+            <div class="oi-title">${escapeHtml(o.pkg)}</div>
+            <div class="oi-sub">${escapeHtml(o.orderCode)} · ${formatRupiah(o.price)} · ID ${escapeHtml(o.uid)} (${escapeHtml(o.zid)})${o.reason ? ' · ' + escapeHtml(o.reason) : ''}</div>
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -1477,7 +1497,7 @@
   }
 
   function openAdmin(){
-    showView('admin');
+    showView('admin'); // showView sudah otomatis memanggil updateMaintenanceLockUI()
     document.getElementById('adminLoginBox').style.display = isAdmin ? 'none' : 'block';
     document.getElementById('adminPanel').style.display = isAdmin ? 'block' : 'none';
     document.getElementById('adminLoginError').style.display = 'none';
@@ -1495,9 +1515,16 @@
   function updateMaintenanceLockUI(){
     const lockEl = document.getElementById('maintenanceLock');
     if(!lockEl) return;
-    // Admin yang sudah login TIDAK pernah ikut terkunci, supaya fitur admin
-    // (termasuk tombol untuk mematikan mode ini) selalu bisa diakses kapan pun.
-    const shouldLock = siteMaintenance && !isAdmin;
+    // Dikecualikan dari lock kalau salah satu dari dua kondisi ini benar:
+    // 1) onAdminView — supaya form login Admin sendiri tidak ikut terkunci
+    //    sebelum admin sempat login (ini yang sebelumnya jadi bug).
+    // 2) isAdmin — supaya admin yang SUDAH login tetap leluasa berpindah ke
+    //    halaman lain (store/orders/payment) untuk mengecek situs tanpa
+    //    ikut terkunci seperti pengunjung publik biasa.
+    // Semua pengunjung TANPA kedua kondisi ini tetap dikunci ketat di halaman apa pun.
+    const adminViewEl = document.getElementById('view-admin');
+    const onAdminView = !!(adminViewEl && adminViewEl.classList.contains('active'));
+    const shouldLock = siteMaintenance && !isAdmin && !onAdminView;
     // Baru saja berubah dari terbuka -> terkunci: tampilkan dialognya dari awal
     // (bukan dalam kondisi "Batal" tersisa dari kunci sebelumnya).
     if(shouldLock && !lockEl.classList.contains('open')){
@@ -1531,8 +1558,14 @@
   // Dipanggil dari tombol "Admin" di dalam dialog — supaya admin tetap bisa
   // membuka form login/panel admin walau halaman publik sedang dikunci.
   function openAdminFromLock(){
-    document.getElementById('maintenanceLock').classList.remove('open');
-    openAdmin();
+    const lockEl = document.getElementById('maintenanceLock');
+    // (1) Sembunyikan overlay SEGERA, sebelum apa pun yang lain terjadi.
+    if(lockEl) lockEl.classList.remove('open');
+    openAdmin(); // di dalamnya showView('admin') otomatis memanggil updateMaintenanceLockUI()
+    // (2) Jaring pengaman terakhir: pastikan overlay benar-benar hilang usai
+    // seluruh proses di atas selesai, apa pun urutan eksekusinya. Kalau titik
+    // (1) sudah cukup, baris ini cuma no-op (tidak mengubah apa-apa lagi).
+    if(lockEl) lockEl.classList.remove('open');
   }
 
   function initMaintenanceWatch(){
@@ -1609,6 +1642,12 @@
       document.getElementById('adminPass').value = '';
       errEl.style.display = 'none';
       renderAdminOrders();
+      // Begitu login admin berhasil, pastikan overlay mode pembaruan langsung
+      // terbuka/hilang — dipaksa eksplisit (bukan cuma lewat perhitungan
+      // shouldLock) supaya admin tidak pernah tersangkut di balik lock walau
+      // ada jeda event real-time dari Firestore.
+      const lockEl = document.getElementById('maintenanceLock');
+      if(lockEl) lockEl.classList.remove('open');
       updateMaintenanceLockUI();
     } else {
       errEl.textContent = 'Username atau password salah.';
@@ -1650,17 +1689,17 @@
         <div class="oi-left">
           <div class="gem-icon"></div>
           <div>
-            <div class="oi-title">${o.pkg}</div>
-            <div class="oi-sub">${o.orderCode} · ${formatRupiah(o.price)} · ID ${o.uid} (${o.zid}) · Akun: ${o.userName || '-'}${o.reason ? ' · ' + o.reason : ''}</div>
+            <div class="oi-title">${escapeHtml(o.pkg)}</div>
+            <div class="oi-sub">${escapeHtml(o.orderCode)} · ${formatRupiah(o.price)} · ID ${escapeHtml(o.uid)} (${escapeHtml(o.zid)}) · Akun: ${escapeHtml(o.userName || '-')}${o.reason ? ' · ' + escapeHtml(o.reason) : ''}</div>
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
           <span class="status-badge ${o.status}">${statusLabel(o.status)}</span>
           ${o.status==='pending' ? `
-            <button class="btn-ghost" style="padding:6px 10px; font-size:11.5px;" onclick="adminSetStatus('${o.docId}','success')">Tandai Berhasil</button>
-            <button class="btn-ghost" style="padding:6px 10px; font-size:11.5px;" onclick="adminSetStatus('${o.docId}','failed')">Tandai Gagal</button>
+            <button class="btn-ghost" style="padding:6px 10px; font-size:11.5px;" onclick="adminSetStatus('${escapeHtml(o.docId)}','success')">Tandai Berhasil</button>
+            <button class="btn-ghost" style="padding:6px 10px; font-size:11.5px;" onclick="adminSetStatus('${escapeHtml(o.docId)}','failed')">Tandai Gagal</button>
           ` : ''}
-          <button class="btn-ghost" style="padding:6px 10px; font-size:11.5px; color:var(--danger); border-color:rgba(255,93,108,0.4);" onclick="adminDeleteOrder('${o.docId}')">Hapus</button>
+          <button class="btn-ghost" style="padding:6px 10px; font-size:11.5px; color:var(--danger); border-color:rgba(255,93,108,0.4);" onclick="adminDeleteOrder('${escapeHtml(o.docId)}')">Hapus</button>
         </div>
       </div>
     `).join('');
@@ -1755,13 +1794,35 @@
       document.getElementById('uid').focus({ preventScroll:true });
     });
   }
+  // Tombol "Batalkan" di order-bar — batalkan pilihan paket TANPA memicu
+  // goToPayment() (jadi tidak akan memunculkan alur "Pesan Sekarang", termasuk
+  // modal login yang biasa muncul di sana kalau pengunjung belum login).
+  function cancelPkgSelection(){
+    selected = null;
+    render();
+    document.getElementById('orderDetails').style.display = 'none';
+    document.getElementById('orderBar').style.display = 'none';
+    document.getElementById('uid').value = '';
+    document.getElementById('zid').value = '';
+    updateOrderBtn();
+    toast('Pemilihan paket dibatalkan.');
+    requestAnimationFrame(()=>{
+      document.getElementById('pkgGrid').scrollIntoView({ behavior:'smooth', block:'center' });
+    });
+  }
   function updateOrderBtn(){
     const uid = document.getElementById('uid').value.trim();
     const zid = document.getElementById('zid').value.trim();
     document.getElementById('orderBtn').disabled = !(selected && uid && zid);
   }
-  document.getElementById('uid').addEventListener('input', updateOrderBtn);
-  document.getElementById('zid').addEventListener('input', updateOrderBtn);
+  // Hanya izinkan angka pada User ID & Zone ID — mencegah karakter aneh/berbahaya
+  // masuk sejak dari sumbernya (bukan cuma diberi filter saat ditampilkan).
+  function sanitizeDigitsInput(el){
+    const cleaned = el.value.replace(/[^0-9]/g, '');
+    if(cleaned !== el.value) el.value = cleaned;
+  }
+  document.getElementById('uid').addEventListener('input', function(){ sanitizeDigitsInput(this); updateOrderBtn(); });
+  document.getElementById('zid').addEventListener('input', function(){ sanitizeDigitsInput(this); updateOrderBtn(); });
 
   /* ---------- PINDAH VIEW (tanpa ganti file) ---------- */
   function showView(name){
@@ -1775,6 +1836,13 @@
     if(activeMap[name]) document.getElementById(activeMap[name]).classList.add('active');
 
     window.scrollTo({ top:0, behavior:'instant' in window ? 'instant' : 'auto' });
+
+    // Terpusat di sini (bukan tersebar di tiap fungsi navigasi) supaya SETIAP
+    // kali halaman berpindah, lock mode pembaruan otomatis dievaluasi ulang:
+    // - Pindah KE halaman Admin -> lock langsung disembunyikan.
+    // - Pindah KELUAR dari halaman Admin (store/orders/payment) -> lock
+    //   langsung aktif lagi kalau mode pembaruan masih menyala, tanpa celah.
+    if(typeof updateMaintenanceLockUI === 'function') updateMaintenanceLockUI();
   }
 
   function bottomNavGo(target){
@@ -1901,6 +1969,10 @@
     const zid = document.getElementById('zid').value.trim();
     const p = packages.find(x=>x.id===selected);
     if(!p || !uid || !zid) return;
+    if(!/^[0-9]+$/.test(uid) || !/^[0-9]+$/.test(zid)){
+      toast('User ID dan Zone ID hanya boleh berisi angka.');
+      return;
+    }
 
     if(!currentUser){
       pendingCheckout = true;
@@ -2308,12 +2380,14 @@
   function showAdModal(){
     const modal = document.getElementById('adModal');
     modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
 
   function closeAdModal(){
     const modal = document.getElementById('adModal');
     modal.classList.remove('open');
-    localStorage.setItem('adModalShown', 'true');
+    document.body.style.overflow = '';
+    sessionStorage.setItem('adModalShown', 'true');
   }
 
   function closeAdAndTopup(){
@@ -2331,7 +2405,7 @@
     createAdDots();
     
     // Cek apakah ad sudah pernah ditampilkan di sesi ini
-    const adShown = localStorage.getItem('adModalShown');
+    const adShown = sessionStorage.getItem('adModalShown');
     if(!adShown){
       setTimeout(() => {
         showAdModal();
@@ -2351,6 +2425,13 @@
     // Click di luar modal untuk close
     document.getElementById('adModal').addEventListener('click', (e) => {
       if(e.target.id === 'adModal'){
+        closeAdModal();
+      }
+    });
+
+    // Tombol Escape untuk menutup popup
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape' && document.getElementById('adModal').classList.contains('open')){
         closeAdModal();
       }
     });
