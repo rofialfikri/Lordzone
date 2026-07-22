@@ -135,6 +135,25 @@
   }
   .btn-guest:hover{border-color:var(--gold-dim); color:var(--gold);}
 
+  /* ---------- PULL TO REFRESH ---------- */
+  #ptrIndicator{
+    position:fixed; left:50%; top:calc(72px + env(safe-area-inset-top));
+    transform:translate(-50%,-70px);
+    z-index:45; display:flex; flex-direction:column; align-items:center; gap:7px;
+    opacity:0; pointer-events:none; transition:transform .2s ease, opacity .2s ease;
+  }
+  #ptrIndicator .ptr-gem{
+    width:34px; height:34px; clip-path:polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    background:linear-gradient(160deg, var(--cyan), var(--gold));
+    box-shadow:0 6px 16px -6px rgba(79,217,232,0.7), 0 0 0 1px rgba(255,255,255,0.08);
+    transition:transform .05s linear;
+  }
+  #ptrIndicator .ptr-label{font-size:11px; color:var(--text-dim); font-weight:700; letter-spacing:.03em; text-transform:uppercase;}
+  #ptrIndicator.ready .ptr-label{color:var(--gold);}
+  #ptrIndicator.loading .ptr-gem{animation:ptrSpin .75s linear infinite;}
+  #ptrIndicator.loading .ptr-label{color:var(--cyan);}
+  @keyframes ptrSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
   /* ---------- OFFLINE LOCK (kunci otomatis saat tidak ada internet) ---------- */
   #offlineLock{
     position:fixed; inset:0; z-index:999; background:var(--bg-void);
@@ -488,6 +507,7 @@
 
   /* ---------- HERO ---------- */
   .hero{position:relative; padding:88px 0 70px; overflow:hidden;}
+  @media (max-width:480px){ .hero{padding:72px 0 44px;} }
   .hero-grid{
     position:absolute; inset:0; opacity:0.35;
     background-image:linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
@@ -521,6 +541,7 @@
   .hero-stats div span{font-size:12.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.08em;}
 
   .hero-visual{position:relative; height:380px; display:flex; align-items:center; justify-content:center;}
+  @media (max-width:480px){ .hero-visual{height:270px; margin-top:8px;} }
   .hero-visual-inner{position:relative; width:340px; height:340px; display:flex; align-items:center; justify-content:center;}
   @media (max-width:480px){ .hero-visual-inner{transform:scale(0.76);} }
 
@@ -574,7 +595,7 @@
   .hero-visual .core span{font-size:12px; letter-spacing:0.1em;}
 
   /* ---------- SECTION HEADS ---------- */
-  .section{padding:64px 0;}
+  .section{padding:64px 0; scroll-margin-top:84px;}
   .section-head{margin-bottom:36px; display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap;}
   .section-head h2{font-size:clamp(26px,3.2vw,36px); font-weight:700;}
   .section-head p{color:var(--text-dim); font-size:14.5px; max-width:420px;}
@@ -759,6 +780,12 @@
 </style>
 </head>
 <body>
+
+<!-- ============== PULL TO REFRESH ============== -->
+<div id="ptrIndicator">
+  <div class="ptr-gem" id="ptrIcon"></div>
+  <span class="ptr-label" id="ptrLabel">Tarik untuk refresh</span>
+</div>
 
 <!-- ============== OFFLINE LOCK (kunci saat tidak ada internet) ============== -->
 <div id="offlineLock">
@@ -3158,8 +3185,83 @@
   initMaintenanceWatch();
   initStatCounters();
   initAdModal();
+  /* ---------- PULL TO REFRESH: tarik dari paling atas buat refresh halaman ---------- */
+  function initPullToRefresh(){
+    const indicator = document.getElementById('ptrIndicator');
+    const icon = document.getElementById('ptrIcon');
+    const label = document.getElementById('ptrLabel');
+    if(!indicator || !icon || !label) return;
+
+    const THRESHOLD = 68;   // jarak tarik minimal biar ke-trigger
+    const MAX_PULL = 100;   // batas tarik biar ga kebablasan (efek karet)
+    let startY = 0, pulling = false, currentPull = 0, refreshing = false;
+
+    function anyOverlayOpen(){
+      return document.getElementById('offlineLock').classList.contains('open')
+        || document.getElementById('adModal').classList.contains('open')
+        || document.querySelector('.modal-overlay.open') !== null;
+    }
+
+    function atTop(){
+      return (window.scrollY || document.documentElement.scrollTop || 0) <= 4;
+    }
+
+    function setPull(px){
+      const ratio = Math.min(px / THRESHOLD, 1);
+      indicator.style.transform = `translate(-50%, ${-70 + ratio * 100}px)`;
+      indicator.style.opacity = String(ratio);
+      icon.style.transform = `rotate(${ratio * 320}deg)`;
+      indicator.classList.toggle('ready', px >= THRESHOLD);
+      label.textContent = px >= THRESHOLD ? 'Lepas untuk refresh' : 'Tarik untuk refresh';
+    }
+
+    function reset(){
+      currentPull = 0;
+      indicator.classList.remove('ready');
+      indicator.style.transform = 'translate(-50%,-70px)';
+      indicator.style.opacity = '0';
+    }
+
+    function triggerRefresh(){
+      refreshing = true;
+      indicator.classList.add('loading');
+      indicator.classList.remove('ready');
+      label.textContent = 'Memuat ulang...';
+      indicator.style.transform = 'translate(-50%, 30px)';
+      indicator.style.opacity = '1';
+      // refresh halaman biar semua data (paket, status koneksi, dll) kebaca ulang dari awal
+      setTimeout(()=>{ window.location.reload(); }, 650);
+    }
+
+    window.addEventListener('touchstart', (e)=>{
+      if(refreshing || anyOverlayOpen() || !atTop()) return;
+      startY = e.touches[0].clientY;
+      pulling = true;
+    }, {passive:true});
+
+    window.addEventListener('touchmove', (e)=>{
+      if(!pulling || refreshing) return;
+      if(anyOverlayOpen() || !atTop()){ pulling = false; reset(); return; }
+      const dy = e.touches[0].clientY - startY;
+      if(dy <= 0){ currentPull = 0; reset(); return; }
+      e.preventDefault(); // cegah ikut bounce/scroll bawaan pas lagi ditarik
+      currentPull = Math.min(dy * 0.5, MAX_PULL);
+      setPull(currentPull);
+    }, {passive:false});
+
+    function onRelease(){
+      if(!pulling || refreshing) return;
+      pulling = false;
+      if(currentPull >= THRESHOLD){ triggerRefresh(); }
+      else { reset(); }
+    }
+    window.addEventListener('touchend', onRelease);
+    window.addEventListener('touchcancel', onRelease);
+  }
+
   initOfflineLock();
   initHelpFabDrag();
+  initPullToRefresh();
 </script>
 
 </body>
