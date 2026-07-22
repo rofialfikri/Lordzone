@@ -6,7 +6,7 @@
 <title>LORDSHOP — Top Up Diamond Mobile Legends</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://accounts.google.com/gsi/client" async defer onerror="window.googleScriptBlocked=true;"></script>
 <style>
   :root{
     --bg-void:#0A0E1A;
@@ -154,6 +154,91 @@
   .acc-avatar-lg img{width:100%; height:100%; object-fit:cover;}
   .acc-name{font-family:'Rajdhani'; font-weight:700; font-size:18px;}
   .acc-type{font-size:11.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em;}
+
+  /* ---------- GANTI NAMA ---------- */
+  .name-edit-row{margin-bottom:14px;}
+  .name-edit-toggle{background:none; border:none; color:var(--cyan); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; margin-top:2px;}
+  .name-edit-toggle:hover{text-decoration:underline;}
+  .name-edit-box{display:none; margin-top:10px; background:var(--bg-panel-2); border:1px solid var(--line); border-radius:8px; padding:12px;}
+  .name-edit-box.open{display:block;}
+  .name-edit-box input{
+    width:100%; background:var(--bg-void); border:1px solid var(--line); border-radius:5px; color:var(--text);
+    padding:10px 12px; font-size:14px; font-family:inherit; margin-bottom:8px;
+  }
+  .name-edit-box input:focus{border-color:var(--cyan);}
+  .name-edit-actions{display:flex; gap:8px;}
+  .name-edit-actions button{
+    flex:1; padding:9px; border-radius:5px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; border:none;
+  }
+  .name-edit-save{background:var(--gold); color:#0A0E1A;}
+  .name-edit-cancel{background:none; border:1px solid var(--line) !important; color:var(--text-dim);}
+  .name-edit-info{font-size:11.5px; color:var(--text-dim); margin-top:8px; line-height:1.5;}
+  .name-edit-info.warn{color:var(--gold);}
+  .name-edit-error{font-size:12px; color:var(--danger); margin-top:6px; display:none;}
+  .name-edit-error.show{display:block;}
+
+  /* ---------- CAPTCHA ---------- */
+  .captcha-box{background:var(--bg-panel-2); border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:18px;}
+  .captcha-label{font-size:12.5px; font-weight:600; color:var(--text-dim); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;}
+  .captcha-refresh{background:none; border:none; color:var(--cyan); cursor:pointer; font-size:12px; font-family:inherit;}
+  .captcha-canvas-wrap{display:flex; justify-content:center; margin-bottom:10px;}
+  #captchaCanvas{border-radius:5px; border:1px solid var(--line); background:var(--bg-void); cursor:pointer;}
+  .captcha-row{display:flex; gap:8px;}
+  .captcha-row input{
+    flex:1; background:var(--bg-void); border:1px solid var(--line); border-radius:5px; color:var(--text);
+    padding:10px 12px; font-size:14px; letter-spacing:0.1em; font-family:inherit;
+  }
+  .captcha-row input:focus{border-color:var(--cyan);}
+  .captcha-row button{
+    background:var(--gold); color:#0A0E1A; font-weight:700; border:none; border-radius:5px; padding:0 18px; cursor:pointer; font-size:13.5px; font-family:inherit;
+  }
+  .captcha-error{font-size:12px; color:var(--danger); margin-top:8px; display:none;}
+  .captcha-error.show{display:block;}
+  .login-options{display:none;}
+  .login-options.unlocked{display:block;}
+
+  /* ---------- LAYANAN BANTUAN (AI CHAT) ---------- */
+  .help-fab{
+    position:fixed; right:16px; bottom:88px; z-index:70; background:var(--gold); color:#0A0E1A; border:none;
+    border-radius:999px; padding:12px 18px; font-weight:700; font-size:13.5px; display:flex; align-items:center; gap:8px;
+    cursor:pointer; box-shadow:0 12px 26px -10px rgba(227,179,65,0.6); font-family:inherit;
+  }
+  .help-fab svg{width:18px; height:18px; stroke:#0A0E1A; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+  .help-modal .modal-card{max-width:400px; padding:0; display:flex; flex-direction:column; height:min(600px, 82vh); overflow:hidden;}
+  .help-header{padding:18px 20px 14px; border-bottom:1px solid var(--line); position:relative; flex-shrink:0;}
+  .help-header h2{font-size:18px;}
+  .help-header p{font-size:12px; color:var(--text-dim); margin-top:4px;}
+  .help-header .modal-close{top:14px; right:14px;}
+  .help-body{flex:1; overflow-y:auto; padding:16px 18px; display:flex; flex-direction:column; gap:10px;}
+  .help-msg{max-width:82%; padding:10px 13px; border-radius:10px; font-size:13.5px; line-height:1.5;}
+  .help-msg.bot{background:var(--bg-panel-2); border:1px solid var(--line); align-self:flex-start; border-bottom-left-radius:2px;}
+  .help-msg.user{background:var(--gold); color:#0A0E1A; align-self:flex-end; border-bottom-right-radius:2px; font-weight:600;}
+  .help-wa-cta{
+    align-self:flex-start; max-width:88%; background:rgba(95,224,160,0.1); border:1px solid rgba(95,224,160,0.4);
+    border-radius:10px; padding:12px; font-size:12.5px; line-height:1.5;
+  }
+  .help-wa-cta b{display:block; color:var(--ok); margin-bottom:6px; font-size:13px;}
+  .help-wa-cta a{
+    display:inline-flex; align-items:center; gap:6px; margin-top:8px; background:var(--ok); color:#0A0E1A;
+    font-weight:700; padding:8px 14px; border-radius:5px; font-size:12.5px;
+  }
+  .help-footer{border-top:1px solid var(--line); padding:12px 14px; flex-shrink:0;}
+  .help-input-row{display:flex; gap:8px; margin-bottom:8px;}
+  .help-input-row input{
+    flex:1; background:var(--bg-panel-2); border:1px solid var(--line); border-radius:999px; color:var(--text);
+    padding:10px 16px; font-size:13.5px; font-family:inherit;
+  }
+  .help-input-row input:focus{border-color:var(--cyan);}
+  .help-input-row button{
+    background:var(--gold); color:#0A0E1A; border:none; border-radius:999px; width:40px; height:40px; flex-shrink:0;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .help-input-row button svg{width:17px; height:17px; stroke:#0A0E1A; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round;}
+  .help-switch-wa{
+    display:flex; align-items:center; justify-content:center; gap:6px; width:100%; background:none; border:1px solid rgba(95,224,160,0.4);
+    color:var(--ok); font-weight:600; font-size:12px; padding:8px; border-radius:6px; cursor:pointer; font-family:inherit; text-align:center;
+  }
+  .help-switch-wa:hover{background:rgba(95,224,160,0.08);}
 
   /* ---------- HERO ---------- */
   .hero{position:relative; padding:88px 0 70px; overflow:hidden;}
@@ -410,7 +495,7 @@
         <div class="trust">
           <div><h3>Harga Bersaing</h3><p>Nominal diamond ditukar langsung dari sumber resmi, tanpa lapisan biaya tersembunyi.</p></div>
           <div><h3>Proses Cepat</h3><p>Sebagian besar pesanan diproses otomatis dalam hitungan menit, siang maupun malam.</p></div>
-          <div><h3>Layanan Bantuan</h3><p>Ada kendala transaksi? Tim kami siap membantu lewat live chat setiap hari.</p></div>
+          <div style="cursor:pointer;" onclick="openHelpChat()"><h3>Layanan Bantuan</h3><p>Ada kendala transaksi? Chat asisten kami atau beralih langsung ke admin via WhatsApp.</p></div>
         </div>
       </div>
     </section>
@@ -432,7 +517,7 @@
       <div class="pay-card">
         <div class="pay-head">
           <button class="back-link" onclick="backToStore()">&larr; Ganti Paket</button>
-          <div class="pay-timer" id="timer">15:00</div>
+          <div class="pay-timer" id="timer">24:00:00</div>
         </div>
 
         <div class="pay-summary">
@@ -541,21 +626,45 @@
     <h2>Masuk ke Akun</h2>
     <p>Masuk untuk menyimpan dan memantau riwayat pesanan kamu.</p>
 
-    <!-- Ganti data-client_id dengan Client ID asli dari Google Cloud Console -->
-    <div id="g_id_onload"
-         data-client_id="GANTI_DENGAN_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-         data-callback="handleGoogleLogin"
-         data-auto_prompt="false">
-    </div>
-    <div class="google-btn-slot">
-      <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-width="300"></div>
-    </div>
-    <div id="googleConfigNotice" style="display:none; background:rgba(227,179,65,0.08); border:1px solid var(--gold-dim); border-radius:6px; padding:12px 14px; font-size:12.5px; color:var(--text-dim); line-height:1.5; text-align:center;">
-      Login Google belum aktif di situs ini. Silakan lanjutkan sebagai Tamu.
+    <!-- Verifikasi captcha wajib sebelum login (Google maupun Tamu). Sekali salah
+         input dianggap gagal verifikasi dan captcha akan diperbarui otomatis. -->
+    <div class="captcha-box" id="captchaBox">
+      <div class="captcha-label">
+        <span>Verifikasi Keamanan</span>
+        <button type="button" class="captcha-refresh" onclick="generateCaptcha()">&#8635; Ganti kode</button>
+      </div>
+      <div class="captcha-canvas-wrap">
+        <canvas id="captchaCanvas" width="220" height="64" onclick="generateCaptcha()"></canvas>
+      </div>
+      <div class="captcha-row">
+        <input id="captchaInput" type="text" maxlength="6" placeholder="Masukkan kode di atas" autocomplete="off" autocapitalize="off">
+        <button type="button" onclick="verifyCaptcha()">Verifikasi</button>
+      </div>
+      <div class="captcha-error" id="captchaError">Kode captcha salah — verifikasi gagal. Kode baru sudah dibuat, silakan coba lagi.</div>
     </div>
 
-    <div class="divider">atau</div>
-    <button class="btn-guest" onclick="loginAsGuest()">Lanjutkan sebagai Tamu</button>
+    <div class="login-options" id="loginOptions">
+      <!-- Ganti data-client_id dengan Client ID asli dari Google Cloud Console.
+           Pastikan domain situs ini juga didaftarkan di "Authorized JavaScript origins"
+           pada Google Cloud Console, kalau tidak Google akan MENOLAK/MEMBLOKIR proses login. -->
+      <div id="g_id_onload"
+           data-client_id="GANTI_DENGAN_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+           data-callback="handleGoogleLogin"
+           data-error_callback="handleGoogleLoginError"
+           data-auto_prompt="false"
+           data-use_fedcm_for_prompt="true"
+           data-itp_support="true">
+      </div>
+      <div class="google-btn-slot">
+        <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-width="300"></div>
+      </div>
+      <div id="googleConfigNotice" style="display:none; background:rgba(227,179,65,0.08); border:1px solid var(--gold-dim); border-radius:6px; padding:12px 14px; font-size:12.5px; color:var(--text-dim); line-height:1.5; text-align:center;">
+        Login Google belum aktif di situs ini. Silakan lanjutkan sebagai Tamu.
+      </div>
+
+      <div class="divider">atau</div>
+      <button class="btn-guest" onclick="loginAsGuest()">Lanjutkan sebagai Tamu</button>
+    </div>
   </div>
 </div>
 
@@ -568,8 +677,48 @@
       <div class="acc-name" id="accName"></div>
       <div class="acc-type" id="accType"></div>
     </div>
+
+    <div class="name-edit-row">
+      <button class="name-edit-toggle" id="nameEditToggle" onclick="toggleNameEditor()">Ubah Nama Akun</button>
+      <div class="name-edit-box" id="nameEditBox">
+        <input id="nameEditInput" type="text" maxlength="30" placeholder="Nama baru">
+        <div class="name-edit-actions">
+          <button class="name-edit-save" onclick="saveNameChange()">Simpan</button>
+          <button class="name-edit-cancel" onclick="toggleNameEditor()">Batal</button>
+        </div>
+        <div class="name-edit-error" id="nameEditError"></div>
+        <div class="name-edit-info" id="nameEditInfo"></div>
+      </div>
+    </div>
+
     <button class="btn-guest" onclick="closeAccountModal(); openOrders();">Pesanan Saya</button>
     <button class="btn-guest" style="margin-top:10px; color:var(--danger); border-color:rgba(255,93,108,0.4);" onclick="closeAccountModal(); logout();">Keluar</button>
+  </div>
+</div>
+
+<!-- ============== TOMBOL & MODAL: LAYANAN BANTUAN (AI) ============== -->
+<button class="help-fab" onclick="openHelpChat()" aria-label="Layanan Bantuan">
+  <svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  Bantuan
+</button>
+
+<div id="helpModal" class="modal-overlay help-modal">
+  <div class="modal-card">
+    <div class="help-header">
+      <button class="modal-close" onclick="closeHelpChat()" aria-label="Tutup">&times;</button>
+      <h2>Asisten LordShop</h2>
+      <p>Chat otomatis — untuk kendala pesanan, kamu bisa beralih ke admin manusia via WhatsApp kapan saja.</p>
+    </div>
+    <div class="help-body" id="helpBody"></div>
+    <div class="help-footer">
+      <div class="help-input-row">
+        <input id="helpInput" type="text" placeholder="Tulis pertanyaanmu..." autocomplete="off" onkeydown="if(event.key==='Enter'){sendHelpMessage();}">
+        <button type="button" onclick="sendHelpMessage()" aria-label="Kirim">
+          <svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+        </button>
+      </div>
+      <button class="help-switch-wa" id="helpSwitchWa" onclick="escalateToWhatsApp()">Beralih ke Admin/Reseller via WhatsApp</button>
+    </div>
   </div>
 </div>
 
@@ -632,11 +781,17 @@
   };
 
   // Dipakai admin untuk menghapus riwayat pesanan secara permanen.
+  // Mengembalikan { ok:true } kalau berhasil, atau { ok:false, code, message }
+  // supaya panel Admin bisa menampilkan alasan gagal (mis. Firestore Security
+  // Rules menolak operasi delete) alih-alih pesanan "diam-diam" tetap muncul.
   window.fbDeleteOrder = async function(docId){
     try{
       await deleteDoc(doc(db, 'orders', docId));
-      return true;
-    }catch(e){ console.error('Gagal hapus pesanan:', e); return false; }
+      return { ok:true };
+    }catch(e){
+      console.error('Gagal hapus pesanan:', e);
+      return { ok:false, code: e && e.code, message: e && e.message };
+    }
   };
 
   // Dipakai saat timer 15 menit habis — hanya menandai Gagal kalau masih Pending
@@ -748,20 +903,56 @@
     try{
       const raw = localStorage.getItem('lordshop_session');
       if(raw) currentUser = JSON.parse(raw);
+      if(currentUser){
+        if(typeof currentUser.nameChangeCount !== 'number') currentUser.nameChangeCount = 0;
+        if(typeof currentUser.lastNameChangeAt === 'undefined') currentUser.lastNameChangeAt = null;
+      }
     }catch(e){}
   }
 
   function handleGoogleLogin(response){
+    if(!captchaPassed){
+      toast('Verifikasi captcha dulu sebelum login dengan Google.');
+      return;
+    }
     const payload = decodeJwtPayload(response.credential);
-    if(!payload) return;
-    setUser({ type:'google', userId: payload.email, name: payload.name || payload.email, email: payload.email, picture: payload.picture });
+    if(!payload){
+      toast('Login Google gagal diproses. Silakan coba lagi atau lanjutkan sebagai Tamu.');
+      return;
+    }
+    setUser({ type:'google', userId: payload.email, name: payload.name || payload.email, email: payload.email, picture: payload.picture, nameChangeCount:0, lastNameChangeAt:null });
     closeLoginModal();
   }
 
+  // Dipanggil Google kalau proses sign-in gagal/diblokir (mis. FedCM ditolak,
+  // popup diblokir browser, third-party cookie dimatikan, dsb). Supaya pembeli
+  // tidak "terjebak", langsung tampilkan opsi lanjut sebagai Tamu.
+  function handleGoogleLoginError(){
+    window.googleLoginBlocked = true;
+    const notice = document.getElementById('googleConfigNotice');
+    const slot = document.querySelector('.google-btn-slot');
+    if(slot) slot.style.display = 'none';
+    if(notice){
+      notice.textContent = 'Login Google tidak bisa diproses di browser ini (mungkin diblokir). Silakan lanjutkan sebagai Tamu.';
+      notice.style.display = 'block';
+    }
+  }
+
+  let toastTimer = null;
+  function toast(message){
+    const el = document.getElementById('toast');
+    if(!el) return;
+    el.textContent = message;
+    el.classList.add('show');
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> el.classList.remove('show'), 3200);
+  }
+
   function loginAsGuest(){
+    if(!captchaPassed){ toast('Verifikasi captcha dulu sebelum melanjutkan.'); return; }
     const guestId = getOrCreateGuestId();
     const guestName = 'Tamu-' + guestId.slice(-4);
-    setUser({ type:'guest', userId: guestId, name: guestName });
+    setUser({ type:'guest', userId: guestId, name: guestName, nameChangeCount:0, lastNameChangeAt:null });
     closeLoginModal();
   }
 
@@ -823,16 +1014,110 @@
   function openLoginModal(){
     const notice = document.getElementById('googleConfigNotice');
     const slot = document.querySelector('.google-btn-slot');
-    if(!isGoogleConfigured()){
+    if(window.googleScriptBlocked){
+      // Script accounts.google.com/gsi/client gagal dimuat (biasanya karena
+      // ad-blocker / ekstensi privasi / jaringan memblokir domain Google).
       if(slot) slot.style.display = 'none';
-      if(notice) notice.style.display = 'block';
+      if(notice){
+        notice.textContent = 'Login Google tidak bisa dimuat di browser ini (kemungkinan diblokir oleh ekstensi/ad-blocker). Silakan lanjutkan sebagai Tamu, atau nonaktifkan pemblokir untuk situs ini.';
+        notice.style.display = 'block';
+      }
+    } else if(!isGoogleConfigured()){
+      if(slot) slot.style.display = 'none';
+      if(notice){
+        notice.textContent = 'Login Google belum aktif di situs ini. Silakan lanjutkan sebagai Tamu.';
+        notice.style.display = 'block';
+      }
     } else {
       if(slot) slot.style.display = 'flex';
       if(notice) notice.style.display = 'none';
     }
     document.getElementById('loginModal').classList.add('open');
+    resetCaptchaGate();
   }
   function closeLoginModal(){ document.getElementById('loginModal').classList.remove('open'); }
+
+  /* ---------- CAPTCHA (wajib sebelum login Google maupun Tamu) ---------- */
+  let captchaCode = '';
+  let captchaPassed = false;
+
+  function resetCaptchaGate(){
+    captchaPassed = false;
+    document.getElementById('captchaBox').style.display = 'block';
+    document.getElementById('loginOptions').classList.remove('unlocked');
+    document.getElementById('captchaError').classList.remove('show');
+    const input = document.getElementById('captchaInput');
+    if(input) input.value = '';
+    generateCaptcha();
+  }
+
+  function generateCaptcha(){
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // hindari karakter ambigu (I,O,0,1)
+    let code = '';
+    for(let i=0;i<5;i++) code += chars[Math.floor(Math.random()*chars.length)];
+    captchaCode = code;
+    const input = document.getElementById('captchaInput');
+    if(input) input.value = '';
+    document.getElementById('captchaError').classList.remove('show');
+    drawCaptcha(code);
+  }
+
+  function drawCaptcha(code){
+    const canvas = document.getElementById('captchaCanvas');
+    if(!canvas || !canvas.getContext) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = '#171D33';
+    ctx.fillRect(0,0,w,h);
+    // garis-garis pengganggu
+    for(let i=0;i<6;i++){
+      ctx.strokeStyle = `rgba(${120+Math.random()*100},${120+Math.random()*100},${120+Math.random()*100},0.35)`;
+      ctx.beginPath();
+      ctx.moveTo(Math.random()*w, Math.random()*h);
+      ctx.lineTo(Math.random()*w, Math.random()*h);
+      ctx.stroke();
+    }
+    // titik noise
+    for(let i=0;i<60;i++){
+      ctx.fillStyle = `rgba(${150+Math.random()*80},${150+Math.random()*80},${150+Math.random()*80},0.4)`;
+      ctx.fillRect(Math.random()*w, Math.random()*h, 1.5, 1.5);
+    }
+    // teks kode dengan sedikit rotasi & warna acak per karakter
+    const colors = ['#E3B341','#4FD9E8','#E9EDF6','#5FE0A0'];
+    const charW = w / (code.length + 1);
+    for(let i=0;i<code.length;i++){
+      ctx.save();
+      const x = charW * (i + 0.8);
+      const y = h/2 + (Math.random()*10 - 5);
+      ctx.translate(x, y);
+      ctx.rotate((Math.random()*0.5 - 0.25));
+      ctx.font = 'bold 30px Rajdhani, sans-serif';
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(code[i], 0, 0);
+      ctx.restore();
+    }
+  }
+
+  function verifyCaptcha(){
+    const input = document.getElementById('captchaInput');
+    const typed = (input ? input.value : '').trim().toUpperCase();
+    const errorEl = document.getElementById('captchaError');
+    // Sesuai ketentuan: sekali input salah langsung dianggap gagal verifikasi,
+    // captcha diperbarui dan pembeli harus mengulang dari kode yang baru.
+    if(!typed || typed !== captchaCode){
+      errorEl.classList.add('show');
+      captchaPassed = false;
+      generateCaptcha();
+      return;
+    }
+    captchaPassed = true;
+    errorEl.classList.remove('show');
+    document.getElementById('captchaBox').style.display = 'none';
+    document.getElementById('loginOptions').classList.add('unlocked');
+  }
 
   /* ---------- RIWAYAT PESANAN ---------- */
   function openOrders(){
@@ -974,18 +1259,48 @@
     if(window.fbUpdateOrderStatus) window.fbUpdateOrderStatus(docId, status, null);
   }
 
-  function adminDeleteOrder(docId){
+  function explainDeleteError(result){
+    if(result && result.code === 'permission-denied'){
+      return 'Gagal hapus: ditolak oleh Firestore Security Rules. Buka Firebase Console → Firestore → Rules, lalu izinkan operasi "delete" pada koleksi "orders" (atau sesuaikan dengan cara admin diautentikasi).';
+    }
+    return 'Gagal menghapus pesanan. Coba lagi beberapa saat, atau cek koneksi internet.';
+  }
+
+  async function adminDeleteOrder(docId){
     if(!confirm('Yakin mau hapus riwayat pesanan ini? Tindakan ini tidak bisa dibatalkan.')) return;
-    if(window.fbDeleteOrder) window.fbDeleteOrder(docId);
+    if(!window.fbDeleteOrder){
+      toast('Gagal terhubung ke server. Muat ulang halaman lalu coba lagi.');
+      return;
+    }
+    const result = await window.fbDeleteOrder(docId);
+    if(!result || !result.ok){
+      toast(explainDeleteError(result));
+    } else {
+      toast('Riwayat pesanan berhasil dihapus.');
+    }
   }
 
   let lastAdminOrders = [];
   async function adminDeleteAllOrders(){
     if(!lastAdminOrders.length){ return; }
     if(!confirm(`Yakin mau hapus SEMUA ${lastAdminOrders.length} riwayat pesanan? Tindakan ini tidak bisa dibatalkan.`)) return;
-    if(!window.fbDeleteOrder) return;
+    if(!window.fbDeleteOrder){
+      toast('Gagal terhubung ke server. Muat ulang halaman lalu coba lagi.');
+      return;
+    }
+    let failCount = 0;
+    let firstFailResult = null;
     for(const o of lastAdminOrders){
-      await window.fbDeleteOrder(o.docId);
+      const result = await window.fbDeleteOrder(o.docId);
+      if(!result || !result.ok){
+        failCount++;
+        if(!firstFailResult) firstFailResult = result;
+      }
+    }
+    if(failCount > 0){
+      toast(`${failCount} riwayat gagal dihapus. ${explainDeleteError(firstFailResult)}`);
+    } else {
+      toast('Semua riwayat pesanan berhasil dihapus.');
     }
   }
 
@@ -1070,9 +1385,105 @@
       ? `<img src="${currentUser.picture}" alt="">` : initials;
     document.getElementById('accName').textContent = currentUser.name;
     document.getElementById('accType').textContent = currentUser.type === 'google' ? 'Akun Google' : 'Akun Tamu';
+    document.getElementById('nameEditBox').classList.remove('open');
+    document.getElementById('nameEditError').classList.remove('show');
     document.getElementById('accountModal').classList.add('open');
   }
   function closeAccountModal(){ document.getElementById('accountModal').classList.remove('open'); }
+
+  /* ---------- GANTI NAMA AKUN (permanen, maks 5x, jeda 7 hari antar-ubah) ---------- */
+  const NAME_CHANGE_LIMIT = 5;
+  const NAME_CHANGE_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 hari
+
+  function formatDurationSisa(ms){
+    const totalMinutes = Math.ceil(ms / 60000);
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const minutes = totalMinutes % 60;
+    const parts = [];
+    if(days > 0) parts.push(days + ' hari');
+    if(hours > 0) parts.push(hours + ' jam');
+    if(days === 0 && minutes > 0) parts.push(minutes + ' menit');
+    return parts.length ? parts.join(' ') : 'sebentar lagi';
+  }
+
+  function getNameChangeStatus(){
+    if(!currentUser) return { canChange:false };
+    const count = currentUser.nameChangeCount || 0;
+    const sisa = NAME_CHANGE_LIMIT - count;
+    if(sisa <= 0){
+      return { canChange:false, reason:'limit', sisa:0 };
+    }
+    if(currentUser.lastNameChangeAt){
+      const elapsed = Date.now() - currentUser.lastNameChangeAt;
+      if(elapsed < NAME_CHANGE_COOLDOWN_MS){
+        return { canChange:false, reason:'cooldown', sisa, remainingMs: NAME_CHANGE_COOLDOWN_MS - elapsed };
+      }
+    }
+    return { canChange:true, sisa };
+  }
+
+  function toggleNameEditor(){
+    const box = document.getElementById('nameEditBox');
+    const willOpen = !box.classList.contains('open');
+    box.classList.toggle('open', willOpen);
+    document.getElementById('nameEditError').classList.remove('show');
+    if(willOpen && currentUser){
+      document.getElementById('nameEditInput').value = currentUser.name;
+      renderNameEditInfo();
+    }
+  }
+
+  function renderNameEditInfo(){
+    const info = document.getElementById('nameEditInfo');
+    const input = document.getElementById('nameEditInput');
+    const status = getNameChangeStatus();
+    if(status.reason === 'limit'){
+      info.textContent = `Batas ganti nama (${NAME_CHANGE_LIMIT}x) sudah tercapai. Nama tidak bisa diubah lagi.`;
+      info.classList.add('warn');
+      if(input) input.disabled = true;
+    } else if(status.reason === 'cooldown'){
+      info.textContent = `Sisa kesempatan: ${status.sisa} dari ${NAME_CHANGE_LIMIT}x. Kamu bisa ganti nama lagi dalam ${formatDurationSisa(status.remainingMs)}.`;
+      info.classList.add('warn');
+      if(input) input.disabled = true;
+    } else {
+      info.textContent = `Sisa kesempatan ganti nama: ${status.sisa} dari ${NAME_CHANGE_LIMIT}x. Setelah disimpan, nama baru berlaku permanen sampai kesempatan berikutnya (jeda 7 hari).`;
+      info.classList.remove('warn');
+      if(input) input.disabled = false;
+    }
+  }
+
+  function saveNameChange(){
+    const errorEl = document.getElementById('nameEditError');
+    const status = getNameChangeStatus();
+    if(!status.canChange){
+      renderNameEditInfo();
+      return;
+    }
+    const input = document.getElementById('nameEditInput');
+    const newName = (input.value || '').trim();
+    if(newName.length < 2){
+      errorEl.textContent = 'Nama minimal 2 karakter.';
+      errorEl.classList.add('show');
+      return;
+    }
+    if(newName === currentUser.name){
+      errorEl.textContent = 'Nama baru sama dengan nama saat ini.';
+      errorEl.classList.add('show');
+      return;
+    }
+    errorEl.classList.remove('show');
+    currentUser.name = newName;
+    currentUser.nameChangeCount = (currentUser.nameChangeCount || 0) + 1;
+    currentUser.lastNameChangeAt = Date.now();
+    persistSession(currentUser);
+    renderAuthArea();
+    document.getElementById('accName').textContent = currentUser.name;
+    const initials = currentUser.name.trim().slice(0,2).toUpperCase();
+    if(!currentUser.picture) document.getElementById('accAvatar').innerHTML = initials;
+    toggleNameEditor();
+    toast('Nama akun berhasil diubah.');
+  }
 
   async function goToPayment(){
     const uid = document.getElementById('uid').value.trim();
@@ -1144,11 +1555,11 @@
 
   function startTimer(){
     if(timerId) clearInterval(timerId);
-    let secondsLeft = 15 * 60;
+    let secondsLeft = 24 * 60 * 60; // 24 jam
     const timerEl = document.getElementById('timer');
     const orderAtStart = currentOrder;
     timerEl.classList.remove('expired');
-    timerEl.textContent = '15:00';
+    timerEl.textContent = '24:00:00';
     timerId = setInterval(()=>{
       secondsLeft--;
       if(secondsLeft <= 0){
@@ -1158,9 +1569,10 @@
         handleExpiry(orderAtStart);
         return;
       }
-      const m = Math.floor(secondsLeft/60).toString().padStart(2,'0');
+      const h = Math.floor(secondsLeft/3600).toString().padStart(2,'0');
+      const m = Math.floor((secondsLeft%3600)/60).toString().padStart(2,'0');
       const s = (secondsLeft%60).toString().padStart(2,'0');
-      timerEl.textContent = `${m}:${s}`;
+      timerEl.textContent = `${h}:${m}:${s}`;
     }, 1000);
   }
 
@@ -1174,6 +1586,253 @@
       confirmBtn.disabled = true;
       confirmBtn.textContent = 'Waktu Habis';
     }
+  }
+
+  /* ---------- LAYANAN BANTUAN: chat asisten (simulasi AI berbasis aturan) ----------
+     Catatan: situs ini statis (tanpa server), jadi "AI" di sini adalah asisten
+     berbasis kata kunci yang disusun agar jawabannya selengkap dan senatural
+     mungkin seperti chatbot AI sungguhan. Untuk kendala transaksi nyata, pembeli
+     tetap selalu bisa beralih ke admin/reseller manusia lewat WhatsApp — namun
+     kartu ajakan WhatsApp hanya ditampilkan sekali per sesi chat supaya tidak
+     berulang-ulang/spam di layar. */
+  let helpChatOpened = false;
+  let lastHelpUserText = '';
+  let waCtaShown = false; // pastikan kartu ajakan WhatsApp otomatis tidak muncul berkali-kali
+
+  const HELP_ESCALATE_KEYWORDS = [
+    'gagal', 'belum masuk', 'tidak masuk', 'error', 'kendala', 'komplain', 'refund',
+    'tidak berhasil', 'stuck', 'lama banget', 'belum diproses', 'diamond hilang',
+    'salah kirim', 'tertipu', 'penipuan', 'ditipu', 'scam', 'curang', 'lapor',
+    'masalah pesanan', 'uang hilang', 'tidak sesuai', 'salah top up', 'komplen',
+    'ga masuk', 'gak masuk', 'belum terima', 'lambat banget'
+  ];
+
+  function openHelpChat(){
+    document.getElementById('helpModal').classList.add('open');
+    if(!helpChatOpened){
+      helpChatOpened = true;
+      addHelpMessage('bot',
+        'Halo, aku Asisten LordShop 👋\n\n' +
+        'Aku bisa bantu jelasin secara lengkap soal:\n' +
+        '• Cara top up Diamond & alur pemesanan\n' +
+        '• Daftar harga & jenis paket\n' +
+        '• Cara bayar via QRIS\n' +
+        '• Cek status pesanan (pending/berhasil/gagal)\n' +
+        '• Estimasi waktu proses\n' +
+        '• Pengaturan akun (ganti nama, dsb)\n' +
+        '• Kendala transaksi & refund\n\n' +
+        'Silakan tulis pertanyaanmu, aku jawab selengkap mungkin ya. Kalau ternyata butuh ditangani manusia, aku akan arahkan ke admin lewat WhatsApp.'
+      );
+    }
+  }
+  function closeHelpChat(){ document.getElementById('helpModal').classList.remove('open'); }
+
+  // escape HTML lalu ubah baris baru (\n) jadi <br> supaya jawaban panjang/berpoin tetap rapi
+  function formatHelpText(text){
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML.replace(/\n/g, '<br>');
+  }
+
+  function addHelpMessage(role, text){
+    const body = document.getElementById('helpBody');
+    const el = document.createElement('div');
+    el.className = 'help-msg ' + role;
+    el.innerHTML = formatHelpText(text);
+    body.appendChild(el);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function buildWaMessage(){
+    return encodeURIComponent(
+      lastHelpUserText
+        ? `Halo admin LordShop, saya butuh bantuan untuk kendala berikut:\n"${lastHelpUserText}"\n\nMohon dibantu ya, terima kasih.`
+        : `Halo admin LordShop, saya butuh bantuan terkait pesanan saya.`
+    );
+  }
+
+  // Kartu ajakan WhatsApp otomatis hanya dipasang SEKALI per sesi chat.
+  // Kalau kendala serupa disebut lagi, asisten cukup mengingatkan lewat teks
+  // biasa (tanpa menambah kartu baru) supaya chat tidak dipenuhi ajakan berulang.
+  function addHelpWaCta(){
+    if(waCtaShown) return;
+    waCtaShown = true;
+    const body = document.getElementById('helpBody');
+    const el = document.createElement('div');
+    el.className = 'help-wa-cta';
+    el.innerHTML = `<b>Butuh bantuan langsung?</b>Untuk kendala transaksi seperti ini, admin/reseller kami akan lebih cepat memeriksa dan membantu langsung lewat WhatsApp.<br><a href="https://wa.me/${waNumber}?text=${buildWaMessage()}" target="_blank" rel="noopener">Chat Admin via WhatsApp &rarr;</a>`;
+    body.appendChild(el);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function escalateToWhatsApp(){
+    window.open(`https://wa.me/${waNumber}?text=${buildWaMessage()}`, '_blank', 'noopener');
+  }
+
+  function generateAiReply(userText){
+    const t = userText.toLowerCase();
+
+    // 1) Indikasi kendala transaksi -> arahkan ke admin (kartu WA hanya sekali, lihat addHelpWaCta)
+    const isProblem = HELP_ESCALATE_KEYWORDS.some(k => t.includes(k));
+    if(isProblem){
+      return {
+        text:
+          'Aku turut prihatin dengan kendala yang kamu alami. Untuk masalah yang berkaitan langsung dengan transaksi — seperti pesanan gagal, Diamond belum masuk, atau salah input data — aku tidak bisa mengecek data pembayaran secara langsung, jadi ini perlu dicek manual oleh admin.\n\n' +
+          'Supaya lebih cepat ditangani, siapkan dulu:\n' +
+          '1. ID Pesanan (kode ORD...) atau waktu transaksi\n' +
+          '2. User ID & Zone ID akun game\n' +
+          '3. Bukti transfer/screenshot pembayaran\n\n' +
+          'Setelah itu klik tombol WhatsApp yang aku sediakan di bawah, nanti detail chat kamu barusan ikut terkirim otomatis ke admin.',
+        escalate: true
+      };
+    }
+
+    // 2) Sapaan
+    if(/(^|\W)(halo|hai|hi|hey|pagi|siang|sore|malam)(\W|$)/.test(t)){
+      return {
+        text:
+          'Halo juga! Senang bisa bantu 😊 Aku bisa jelasin dari A sampai Z soal top up Diamond Mobile Legends di LordShop — mulai dari cara pesan, metode bayar, sampai cara cek status pesanan.\n\n' +
+          'Mau mulai dari mana? Kamu bisa tanya bebas, atau coba kata kunci seperti "cara top up", "harga paket", atau "status pesanan".'
+      };
+    }
+
+    // 3) Cara top up / alur pemesanan (jawaban lengkap step by step)
+    if(/(cara top up|cara pesan|cara beli|gimana cara|langkah|tutorial)/.test(t)){
+      return {
+        text:
+          'Ini alur lengkap top up di LordShop:\n\n' +
+          '1. Pilih paket Diamond yang kamu mau di halaman utama (ada juga paket "HEMAT" untuk nominal besar).\n' +
+          '2. Isi User ID dan Zone ID akun Mobile Legends kamu dengan teliti — cek ulang biar tidak salah kirim.\n' +
+          '3. Klik "Pesan Sekarang". Kalau belum login, kamu akan diminta login dulu (Google atau sebagai Tamu, ada verifikasi captcha sebentar).\n' +
+          '4. Cek ringkasan pesanan: paket, biaya admin, dan total yang harus dibayar.\n' +
+          '5. Bayar lewat QRIS — scan kode dengan e-wallet/m-banking, lalu salin & masukkan nominal secara manual (kode QRIS ini statis jadi nominal tidak muncul otomatis).\n' +
+          '6. Setelah transfer, tekan tombol "Saya Sudah Bayar".\n' +
+          '7. Admin akan memverifikasi manual, maksimal 10 menit setelah bukti bayar diterima.\n' +
+          '8. Kamu bisa pantau progresnya kapan saja di menu "Pesanan Saya".\n\n' +
+          'Ada bagian yang masih membingungkan?'
+      };
+    }
+
+    // 4) Harga & paket
+    if(/(harga|berapa harga|biaya admin|paket apa saja|list harga|daftar harga)/.test(t)){
+      return {
+        text:
+          'Untuk harga, LordShop punya banyak pilihan paket Diamond, dari nominal kecil sampai besar. Beberapa hal yang perlu kamu tahu:\n\n' +
+          '• Semua harga per paket bisa dilihat langsung di daftar produk halaman utama, jadi selalu real-time dan transparan.\n' +
+          '• Paket dengan nominal besar biasanya diberi label "HEMAT" karena harga per Diamond-nya lebih murah.\n' +
+          '• Ada biaya admin kecil yang ditambahkan di setiap transaksi — nominalnya sudah ditampilkan jelas sebelum kamu bayar, tidak ada biaya tersembunyi.\n\n' +
+          'Kalau kamu sudah tahu paket yang diincar, aku bisa bantu jelasin cara pesannya juga.'
+      };
+    }
+
+    // 5) Cara bayar / QRIS
+    if(/(qris|cara bayar|metode pembayaran|bayar pakai apa|transfer)/.test(t)){
+      return {
+        text:
+          'Pembayaran di LordShop saat ini menggunakan QRIS, jadi bisa dibayar pakai e-wallet atau m-banking apa saja yang mendukung QRIS.\n\n' +
+          'Yang perlu diperhatikan:\n' +
+          '1. Kode QRIS-nya statis, artinya nominal TIDAK otomatis terisi di aplikasi kamu.\n' +
+          '2. Kamu wajib menyalin nominal yang tertera di halaman pembayaran, lalu tempel manual saat membayar.\n' +
+          '3. Pastikan jumlah yang dibayar persis sama dengan nominal yang ditampilkan, agar mudah dicocokkan admin.\n' +
+          '4. Setelah bayar, tekan "Saya Sudah Bayar", dan kalau perlu kirim juga bukti transfernya lewat tombol WhatsApp di halaman pembayaran.'
+      };
+    }
+
+    // 6) Status pesanan
+    if(/(status pesanan|cek pesanan|pesanan saya|sudah sampai belum|riwayat pesanan)/.test(t)){
+      return {
+        text:
+          'Kamu bisa cek status pesanan kapan saja lewat menu "Pesanan Saya" (ikon di navigasi bawah). Ada 3 status yang mungkin muncul:\n\n' +
+          '• Pending — pesanan tercatat dan menunggu admin memverifikasi pembayaran.\n' +
+          '• Berhasil — pembayaran sudah dikonfirmasi dan Diamond sudah diproses masuk.\n' +
+          '• Gagal — ada masalah pada pesanan (misalnya kedaluwarsa karena belum dibayar dalam batas waktu, atau ditolak admin).\n\n' +
+          'Status ini hanya berubah setelah admin memverifikasi secara manual, jadi tidak instan otomatis.'
+      };
+    }
+
+    // 7) Estimasi waktu proses
+    if(/(berapa lama|lama proses|kapan masuk|proses berapa menit|kapan diamond masuk)/.test(t)){
+      return {
+        text:
+          'Setelah bukti pembayaran kamu terima dan tombol "Saya Sudah Bayar" ditekan, admin akan memverifikasi secara manual — biasanya diproses maksimal 10 menit sejak bukti bayar diterima.\n\n' +
+          'Kalau sudah lebih dari itu dan status masih "Pending", boleh banget hubungi admin langsung lewat WhatsApp supaya dicek lebih cepat.'
+      };
+    }
+
+    // 8) Ganti nama akun
+    if(/(ganti nama|ubah nama|nama akun|rename)/.test(t)){
+      return {
+        text:
+          'Kamu bisa ganti nama akun lewat menu Akun → "Ubah Nama Akun". Beberapa aturannya:\n\n' +
+          '• Nama hanya bisa diganti maksimal 5 kali seumur akun.\n' +
+          '• Setiap kali sudah ganti nama, ada jeda 7 hari sebelum bisa ganti lagi.\n' +
+          '• Sisa kesempatan dan sisa waktu tunggu akan ditampilkan otomatis di halaman ubah nama.\n\n' +
+          'Jadi pastikan nama barunya sudah benar-benar kamu inginkan sebelum disimpan ya, karena kesempatannya terbatas.'
+      };
+    }
+
+    // 9) Captcha
+    if(/(captcha|kode verifikasi|kode tidak muncul|kode salah terus)/.test(t)){
+      return {
+        text:
+          'Captcha itu langkah verifikasi keamanan sebelum login (baik lewat Google maupun sebagai Tamu), tujuannya mencegah bot otomatis.\n\n' +
+          'Cara pakainya: lihat kode acak di gambar, ketik persis di kolom yang tersedia, lalu klik "Verifikasi". Kalau kode yang kamu masukkan salah walau cuma sekali, sistem otomatis menganggapnya gagal verifikasi dan akan membuatkan kode baru — jadi kamu tinggal coba lagi dengan kode yang baru itu. Kamu juga bisa klik ikon "Ganti kode" atau gambar captcha-nya kalau ingin kode baru tanpa harus salah dulu.'
+      };
+    }
+
+    // 10) Login / akun bermasalah (non-transaksi)
+    if(/(tidak bisa login|login gagal|akun google|masuk pakai apa)/.test(t)){
+      return {
+        text:
+          'Kamu bisa login dengan dua cara: pakai akun Google, atau langsung sebagai Tamu tanpa perlu akun apa pun.\n\n' +
+          'Kalau tombol login Google tidak muncul atau gagal dimuat (biasanya karena ad-blocker/ekstensi privasi di browser), sistem akan otomatis menyarankan kamu lanjut sebagai Tamu saja supaya tetap bisa transaksi tanpa hambatan. Riwayat pesanan tetap tersimpan sesuai akun yang kamu pakai saat itu.'
+      };
+    }
+
+    // 11) Jam operasional / respons admin
+    if(/(jam operasional|jam buka|kapan admin balas|jam berapa admin|24 jam)/.test(t)){
+      return {
+        text:
+          'Aku (asisten chat) bisa diajak ngobrol 24 jam kapan saja untuk pertanyaan umum. Untuk verifikasi pembayaran dan penanganan kendala oleh admin manusia, responsnya mengikuti jam operasional tim — tapi pesan WhatsApp tetap bisa dikirim kapan pun dan akan dibalas secepat mungkin begitu admin online.'
+      };
+    }
+
+    // 12) Fallback — tetap lengkap & mengarahkan, bukan cuma "tidak mengerti"
+    return {
+      text:
+        'Hmm, aku belum yakin maksud pertanyaannya, tapi tenang — coba tanyakan salah satu topik ini dan aku akan jawab selengkap mungkin:\n\n' +
+        '• "cara top up" — alur pemesanan dari awal sampai selesai\n' +
+        '• "harga paket" — info harga & biaya admin\n' +
+        '• "cara bayar" — panduan pembayaran QRIS\n' +
+        '• "status pesanan" — arti tiap status pesanan\n' +
+        '• "berapa lama proses" — estimasi waktu Diamond masuk\n' +
+        '• "ganti nama" — aturan ubah nama akun\n\n' +
+        'Kalau ternyata ini soal kendala transaksi (pesanan gagal, dsb), bilang saja detailnya dan aku arahkan ke admin lewat WhatsApp.',
+      escalate: false
+    };
+  }
+
+  function sendHelpMessage(){
+    const input = document.getElementById('helpInput');
+    const text = (input.value || '').trim();
+    if(!text) return;
+    lastHelpUserText = text;
+    addHelpMessage('user', text);
+    input.value = '';
+
+    setTimeout(()=>{
+      const reply = generateAiReply(text);
+      addHelpMessage('bot', reply.text);
+      if(reply.escalate){
+        if(!waCtaShown){
+          addHelpWaCta();
+        } else {
+          // Sudah pernah diarahkan sebelumnya di sesi ini — jangan tambah kartu WA baru lagi,
+          // cukup ingatkan lewat teks singkat supaya tidak terasa spam.
+          addHelpMessage('bot', 'Kamu masih bisa langsung menghubungi admin lewat tombol "Beralih ke Admin/Reseller via WhatsApp" di bagian bawah chat ini kapan saja.');
+        }
+      }
+    }, 450);
   }
 
   restoreSession();
