@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -27,10 +27,10 @@
   }
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   html{scroll-behavior:smooth; overscroll-behavior:none; height:100%; height:100dvh;}
-  html, body{ overscroll-behavior-y:none; width:100%; }
+  html, body{ overscroll-behavior-y:none; width:100%; max-width:100vw; }
   body{
     background:var(--bg-void); color:var(--text); font-family:'Plus Jakarta Sans', sans-serif;
-    overflow-x:hidden; padding-bottom:calc(78px + env(safe-area-inset-bottom)); min-height:100%; min-height:100dvh;
+    overflow-x:hidden; max-width:100vw; padding-bottom:calc(78px + env(safe-area-inset-bottom)); min-height:100%; min-height:100dvh;
     -webkit-user-select:none; user-select:none;
     background-image:
       radial-gradient(circle at 15% 8%, rgba(79,217,232,0.08), transparent 40%),
@@ -80,6 +80,24 @@
   .nav-mobile-hide{display:flex;}
   @media (max-width:760px){ .nav-mobile-hide{display:none;} }
   .nav-right{display:flex; align-items:center; gap:12px;}
+  @media (max-width:480px){
+    .wrap{padding-left:12px; padding-right:12px;}
+    .nav-right{gap:5px;}
+    .nav-cta{padding:9px 11px; font-size:12px;}
+    .nav-cta .cta-full{display:none;}
+    .btn-apk-nav{padding:7px 8px;}
+    .logo{font-size:17px; gap:5px;}
+    .logo .gem{width:13px; height:13px;}
+    .net-status{display:none;}
+    .user-chip{padding:5px 6px 5px 5px; gap:0;}
+    .user-chip .user-name{display:none;}
+    .user-avatar{width:26px; height:26px;}
+    .btn-login{padding:8px 10px; font-size:12.5px;}
+  }
+  @media (max-width:360px){
+    .nav-cta{padding:8px 9px; font-size:11.5px;}
+    .btn-apk-nav .apk-nav-label{display:none;}
+  }
 
   /* ---------- AUTH: nav chip + dropdown ---------- */
   .btn-login{
@@ -409,6 +427,31 @@
   .captcha-error.show{display:block;}
   .login-options{display:none;}
   .login-options.unlocked{display:block;}
+
+  /* ---------- AUTH TABS: Masuk vs Daftar (terpisah) ---------- */
+  .auth-tabs{display:flex; gap:6px; background:var(--bg-panel-2); border:1px solid var(--line); border-radius:7px; padding:4px; margin-bottom:18px;}
+  .auth-tab{flex:1; background:none; border:none; padding:9px; border-radius:5px; font-size:13px; font-weight:700; color:var(--text-dim); cursor:pointer; font-family:inherit; letter-spacing:0.02em;}
+  .auth-tab.active{background:var(--gold); color:#0A0E1A;}
+  .auth-view{display:none;}
+  .auth-view.active{display:block;}
+  .auth-input-group{margin-bottom:10px;}
+  .auth-input-group label{display:block; font-size:12px; font-weight:600; color:var(--text-dim); margin-bottom:6px;}
+  .auth-input-group input{
+    width:100%; background:var(--bg-void); border:1px solid var(--line); border-radius:5px; color:var(--text);
+    padding:11px 12px; font-size:14px; font-family:inherit;
+  }
+  .auth-input-group input:focus{border-color:var(--cyan);}
+  .btn-auth-submit{
+    width:100%; background:var(--gold); color:#0A0E1A; font-weight:700; border:none; border-radius:5px;
+    padding:13px; cursor:pointer; font-size:14px; font-family:inherit; margin-top:4px;
+  }
+  .auth-form-error{font-size:12px; color:var(--danger); margin-top:8px; display:none; line-height:1.5;}
+  .auth-form-error.show{display:block;}
+  .auth-form-ok{font-size:12px; color:var(--ok); margin-top:8px; display:none; line-height:1.5;}
+  .auth-form-ok.show{display:block;}
+  .auth-switch{font-size:12.5px; color:var(--text-dim); text-align:center; margin-top:16px;}
+  .auth-switch button{background:none; border:none; color:var(--cyan); font-weight:600; cursor:pointer; font-family:inherit; font-size:inherit; padding:0;}
+  .auth-switch button:hover{text-decoration:underline;}
 
   /* ---------- LAYANAN BANTUAN (AI CHAT) ---------- */
   .help-fab{
@@ -778,6 +821,14 @@
   .toggle-switch input:checked + .toggle-slider{ background:rgba(255,93,108,0.25); border-color:var(--danger); }
   .toggle-switch input:checked + .toggle-slider::before{ transform:translateX(20px); background:var(--danger); }
 </style>
+<!-- SDK EmailJS: dipakai untuk fitur "Lupa Password" mengirim kode reset ke Gmail pembeli.
+     Public Key di bawah memang AMAN ditaruh di sisi client (bukan rahasia). -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  (function(){
+    emailjs.init({ publicKey: "B3ac6LPbLHfDmXkJ_" });
+  })();
+</script>
 </head>
 <body>
 
@@ -912,7 +963,7 @@
         <a href="lordshop.apk" download="LORDSHOP.apk" class="btn-apk-nav" title="Download App Android (.apk)">
           <span>⬇</span><span class="apk-nav-label">Download App</span>
         </a>
-        <a href="#topup" class="nav-cta">Isi Diamond</a>
+        <a href="#topup" class="nav-cta">Isi <span class="cta-full">Diamond</span></a>
       </div>
     </div>
   </nav>
@@ -1146,11 +1197,11 @@
 <div id="loginModal" class="modal-overlay">
   <div class="modal-card">
     <button class="modal-close" onclick="closeLoginModal()" aria-label="Tutup">&times;</button>
-    <h2>Masuk ke Akun</h2>
-    <p>Masuk untuk menyimpan dan memantau riwayat pesanan kamu.</p>
+    <h2 id="authModalTitle">Masuk ke Akun</h2>
+    <p id="authModalSubtitle">Masuk untuk menyimpan dan memantau riwayat pesanan kamu.</p>
 
-    <!-- Verifikasi captcha wajib sebelum login (Google maupun Tamu). Sekali salah
-         input dianggap gagal verifikasi dan captcha akan diperbarui otomatis. -->
+    <!-- Verifikasi captcha wajib sebelum lanjut (Masuk maupun Daftar, Google maupun Tamu).
+         Sekali salah input dianggap gagal verifikasi dan captcha akan diperbarui otomatis. -->
     <div class="captcha-box" id="captchaBox">
       <div class="captcha-label">
         <span>Verifikasi Keamanan</span>
@@ -1167,26 +1218,133 @@
     </div>
 
     <div class="login-options" id="loginOptions">
-      <!-- Ganti data-client_id dengan Client ID asli dari Google Cloud Console.
-           Pastikan domain situs ini juga didaftarkan di "Authorized JavaScript origins"
-           pada Google Cloud Console, kalau tidak Google akan MENOLAK/MEMBLOKIR proses login. -->
-      <div id="g_id_onload"
-           data-client_id="GANTI_DENGAN_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-           data-callback="handleGoogleLogin"
-           data-error_callback="handleGoogleLoginError"
-           data-auto_prompt="false"
-           data-use_fedcm_for_prompt="true"
-           data-itp_support="true">
-      </div>
-      <div class="google-btn-slot">
-        <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-width="300"></div>
-      </div>
-      <div id="googleConfigNotice" style="display:none; background:rgba(227,179,65,0.08); border:1px solid var(--gold-dim); border-radius:6px; padding:12px 14px; font-size:12.5px; color:var(--text-dim); line-height:1.5; text-align:center;">
-        Login Google belum aktif di situs ini. Silakan lanjutkan sebagai Tamu.
+
+      <!-- Tab terpisah: Masuk (login) vs Daftar (bikin akun email+password baru) -->
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tabBtnLogin" onclick="switchAuthTab('login')">Masuk</button>
+        <button type="button" class="auth-tab" id="tabBtnRegister" onclick="switchAuthTab('register')">Daftar</button>
       </div>
 
-      <div class="divider">atau</div>
-      <button class="btn-guest" onclick="loginAsGuest()">Lanjutkan sebagai Tamu</button>
+      <!-- ===== VIEW: MASUK ===== -->
+      <div class="auth-view active" id="authViewLogin">
+        <!-- Ganti data-client_id dengan Client ID asli dari Google Cloud Console.
+             Pastikan domain situs ini juga didaftarkan di "Authorized JavaScript origins"
+             pada Google Cloud Console, kalau tidak Google akan MENOLAK/MEMBLOKIR proses login. -->
+        <div id="g_id_onload"
+             data-client_id="GANTI_DENGAN_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+             data-callback="handleGoogleLogin"
+             data-error_callback="handleGoogleLoginError"
+             data-auto_prompt="false"
+             data-use_fedcm_for_prompt="true"
+             data-itp_support="true">
+        </div>
+        <div class="google-btn-slot">
+          <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-width="300"></div>
+        </div>
+        <div id="googleConfigNotice" style="display:none; background:rgba(227,179,65,0.08); border:1px solid var(--gold-dim); border-radius:6px; padding:12px 14px; font-size:12.5px; color:var(--text-dim); line-height:1.5; text-align:center;">
+          Login Google belum aktif di situs ini. Silakan lanjutkan sebagai Tamu.
+        </div>
+
+        <div class="divider">atau masuk pakai akun</div>
+
+        <!-- Login dengan email + password akun yang sudah didaftarkan sebelumnya
+             lewat tab "Daftar". Password di sini BUKAN password email/Gmail,
+             melainkan password baru yang dibuat sendiri saat Daftar. -->
+        <div class="auth-input-group">
+          <label for="loginEmailInput">Email</label>
+          <input id="loginEmailInput" type="email" placeholder="nama@gmail.com" autocomplete="username" inputmode="email">
+          <div style="font-size:11px; color:var(--text-dim); margin-top:5px;">Harus email @gmail.com</div>        </div>
+        <div class="auth-input-group">
+          <label for="loginPasswordInput">Password Akun</label>
+          <input id="loginPasswordInput" type="password" placeholder="Password akun kamu" autocomplete="current-password">
+        </div>
+        <button type="button" class="btn-auth-submit" onclick="loginWithAccount()">Masuk</button>
+        <div class="auth-form-error" id="loginAccountError"></div>
+        <div class="auth-switch" style="margin-top:10px;">
+          <button type="button" onclick="switchAuthTab('forgot')" style="color:var(--text-dim); font-weight:500;">Lupa password?</button>
+        </div>
+
+        <div class="divider">atau</div>
+        <button class="btn-guest" onclick="loginAsGuest()">Lanjutkan sebagai Tamu</button>
+
+        <div class="auth-switch">Belum punya akun? <button type="button" onclick="switchAuthTab('register')">Daftar di sini</button></div>
+      </div>
+
+      <!-- ===== VIEW: DAFTAR ===== -->
+      <div class="auth-view" id="authViewRegister">
+        <p style="font-size:12.5px; color:var(--text-dim); line-height:1.5; margin-bottom:16px;">
+          Buat akun baru pakai email kamu. Data akan tersimpan supaya nanti bisa masuk lagi
+          cukup dengan email dan password ini (bukan password email kamu).
+        </p>
+        <div class="auth-input-group">
+          <label for="regUsernameInput">Nama / Username</label>
+          <input id="regUsernameInput" type="text" maxlength="30" placeholder="Nama tampilan kamu" autocomplete="nickname">
+        </div>
+        <div class="auth-input-group">
+          <label for="regEmailInput">Email</label>
+          <input id="regEmailInput" type="email" placeholder="nama@gmail.com" autocomplete="email" inputmode="email">
+          <div style="font-size:11px; color:var(--text-dim); margin-top:5px;">Harus email @gmail.com</div>
+        </div>
+        <div class="auth-input-group">
+          <label for="regPasswordInput">Buat Password Baru</label>
+          <input id="regPasswordInput" type="password" placeholder="Min. 8 karakter, kombinasi huruf besar/kecil, angka & simbol" autocomplete="new-password">
+          <div style="font-size:11px; color:var(--text-dim); margin-top:5px;">Minimal 8 karakter, wajib ada huruf besar, huruf kecil, angka, dan simbol (contoh: !@#$%). Password ini beda dari password email kamu.</div>
+        </div>
+        <div class="auth-input-group">
+          <label for="regPasswordConfirmInput">Ulangi Password</label>
+          <input id="regPasswordConfirmInput" type="password" placeholder="Ketik ulang password" autocomplete="new-password">
+        </div>
+        <button type="button" class="btn-auth-submit" onclick="registerAccount()">Daftar</button>
+        <div class="auth-form-error" id="registerError"></div>
+        <div class="auth-form-ok" id="registerOk"></div>
+
+        <div class="auth-switch">Sudah punya akun? <button type="button" onclick="switchAuthTab('login')">Masuk di sini</button></div>
+      </div>
+
+      <!-- ===== VIEW: LUPA PASSWORD ===== -->
+      <div class="auth-view" id="authViewForgot">
+        <!-- Kode reset dikirim otomatis ke Gmail pemilik akun lewat backend (window.fbSendPasswordResetEmail).
+             TIDAK ada password Gmail pribadi siapa pun yang disimpan/dipakai di sini. -->
+        <div id="forgotStep1">
+          <p style="font-size:12.5px; color:var(--text-dim); line-height:1.5; margin-bottom:16px;">
+            Masukkan email akun kamu. Kalau email itu terdaftar, kode reset 6 digit akan
+            dikirim otomatis ke Gmail tersebut.
+          </p>
+          <div class="auth-input-group">
+            <label for="forgotEmailInput">Email</label>
+            <input id="forgotEmailInput" type="email" placeholder="nama@gmail.com" autocomplete="email" inputmode="email">
+            <div style="font-size:11px; color:var(--text-dim); margin-top:5px;">Harus email @gmail.com yang sudah terdaftar</div>
+          </div>
+          <button type="button" class="btn-auth-submit" onclick="requestPasswordReset()">Kirim Kode Reset</button>
+          <div class="auth-form-error" id="forgotStep1Error"></div>
+        </div>
+
+        <div id="forgotStep2" style="display:none;">
+          <p style="font-size:12.5px; color:var(--text-dim); line-height:1.5; margin-bottom:16px;">
+            Kalau email <b id="forgotEmailDisplay"></b> terdaftar, kode sudah dikirim ke Gmail itu.
+            Masukkan kodenya beserta password baru kamu.
+          </p>
+          <div class="auth-input-group">
+            <label for="forgotCodeInput">Kode Reset (6 digit)</label>
+            <input id="forgotCodeInput" type="text" maxlength="6" placeholder="Contoh: 482913" autocomplete="one-time-code" inputmode="numeric">
+          </div>
+          <div class="auth-input-group">
+            <label for="forgotNewPasswordInput">Password Baru</label>
+            <input id="forgotNewPasswordInput" type="password" placeholder="Min. 8 karakter, kombinasi huruf besar/kecil, angka & simbol" autocomplete="new-password">
+          </div>
+          <div class="auth-input-group">
+            <label for="forgotNewPasswordConfirmInput">Ulangi Password Baru</label>
+            <input id="forgotNewPasswordConfirmInput" type="password" placeholder="Ketik ulang password baru" autocomplete="new-password">
+          </div>
+          <button type="button" class="btn-auth-submit" onclick="confirmPasswordReset()">Ganti Password</button>
+          <div class="auth-form-error" id="forgotStep2Error"></div>
+          <div class="auth-form-ok" id="forgotStep2Ok"></div>
+          <div class="auth-switch"><button type="button" id="resendCodeBtn" onclick="resendPasswordReset()">Kirim ulang kode</button></div>
+        </div>
+
+        <div class="auth-switch">Ingat password kamu? <button type="button" onclick="switchAuthTab('login')">← Kembali ke Masuk</button></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1219,7 +1377,7 @@
     <div class="voucher-box" id="voucherBox">
       <div class="voucher-title">🎟️ Voucher Diskon Biaya Admin</div>
       <div class="voucher-status" id="voucherStatusText">Memuat status voucher...</div>
-      <button class="btn-guest" style="margin-top:10px;" onclick="buyVoucherCode()">Beli Kode Voucher (Rp 3.000)</button>
+      <button class="btn-guest" id="buyVoucherBtn" style="margin-top:10px;" onclick="buyVoucherCode()">Beli Kode Voucher (Rp 3.000)</button>
       <div class="voucher-redeem-row">
         <input id="voucherRedeemInput" type="text" placeholder="Masukkan kode voucher" autocomplete="off" autocapitalize="characters">
         <button type="button" onclick="redeemVoucherCode()">Pakai</button>
@@ -1499,7 +1657,7 @@
     }[ch]));
   }
 
-  let currentUser = null; // { type:'google'|'guest', name, email, picture, userId, activeVoucher }
+  let currentUser = null; // { type:'google'|'account'|'guest', name, email, picture, userId, activeVoucher }
   let pendingCheckout = false;
   let pendingVoucherPurchase = false;
 
@@ -1523,6 +1681,301 @@
     }
     return gid;
   }
+
+  /* ---------- AKUN TERDAFTAR (email + password buatan sendiri, bukan password email) ----------
+     Disimpan di localStorage, terpisah dari sesi login (lordshop_session) dan dari
+     sesi tamu (lordshop_guest_id). Password TIDAK disimpan mentah:
+     - Tiap akun punya SALT ACAK sendiri (bukan dari email, biar tidak bisa ditebak/dipakai ulang).
+     - Di-hash pakai PBKDF2-SHA256 dengan 100.000 iterasi (bukan sekadar SHA-256 sekali jalan),
+       supaya jauh lebih berat/lambat buat siapa pun yang coba brute-force nebak password
+       walau localStorage-nya kebaca. */
+  const ACCOUNTS_KEY = 'lordshop_accounts';
+  const ATTEMPTS_KEY = 'lordshop_login_attempts';
+  const PBKDF2_ITERATIONS = 100000;
+  const MAX_LOGIN_ATTEMPTS = 5;
+  const LOCKOUT_MS = 60 * 1000; // kunci 60 detik kalau gagal berkali-kali (anti tebak-tebakan password)
+
+  function getAccounts(){
+    try{ return JSON.parse(localStorage.getItem(ACCOUNTS_KEY)) || {}; }catch(e){ return {}; }
+  }
+  function saveAccounts(accounts){
+    try{ localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts)); }catch(e){}
+  }
+
+  function generateSalt(){
+    const bytes = new Uint8Array(16);
+    if(window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
+    else for(let i=0;i<bytes.length;i++) bytes[i] = Math.floor(Math.random()*256);
+    return Array.from(bytes).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function hashPassword(password, salt){
+    const enc = new TextEncoder();
+    if(window.crypto && crypto.subtle && crypto.subtle.importKey){
+      try{
+        const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+        const bits = await crypto.subtle.deriveBits(
+          { name:'PBKDF2', salt: enc.encode(salt), iterations: PBKDF2_ITERATIONS, hash:'SHA-256' },
+          keyMaterial, 256
+        );
+        return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2,'0')).join('');
+      }catch(e){ /* lanjut ke fallback di bawah kalau PBKDF2 gagal */ }
+    }
+    // Fallback kalau Web Crypto/PBKDF2 tidak tersedia (browser sangat lama/non-HTTPS).
+    let h = 0;
+    const str = salt + ':' + password;
+    for(let i=0;i<str.length;i++){ h = ((h << 5) - h + str.charCodeAt(i)) | 0; }
+    return 'fb' + Math.abs(h).toString(16);
+  }
+
+  /* Email WAJIB pakai domain @gmail.com sesuai ketentuan, dicek di Daftar & Masuk */
+  function isValidGmail(email){
+    return /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email);
+  }
+
+  /* Password diperketat: min 8 karakter + huruf besar + huruf kecil + angka + simbol,
+     supaya lebih tahan ditebak orang iseng yang mau coba akses akun orang lain. */
+  function validatePasswordStrength(password){
+    if(password.length < 8) return 'Password minimal 8 karakter.';
+    if(!/[a-z]/.test(password)) return 'Password harus ada huruf kecil.';
+    if(!/[A-Z]/.test(password)) return 'Password harus ada huruf besar.';
+    if(!/[0-9]/.test(password)) return 'Password harus ada angka.';
+    if(!/[^A-Za-z0-9]/.test(password)) return 'Password harus ada simbol (misal !@#$%).';
+    return null;
+  }
+
+  /* ---------- ANTI BRUTE-FORCE: kunci sementara kalau salah password berkali-kali ----------
+     Supaya orang iseng tidak bisa asal coba-coba nebak password akun orang lain tanpa batas. */
+  function getAttempts(){
+    try{ return JSON.parse(localStorage.getItem(ATTEMPTS_KEY)) || {}; }catch(e){ return {}; }
+  }
+  function saveAttempts(attempts){
+    try{ localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(attempts)); }catch(e){}
+  }
+  function getLockRemaining(email){
+    const attempts = getAttempts();
+    const rec = attempts[email];
+    if(!rec || !rec.lockUntil) return 0;
+    const remaining = rec.lockUntil - Date.now();
+    return remaining > 0 ? remaining : 0;
+  }
+  function registerFailedAttempt(email){
+    const attempts = getAttempts();
+    const rec = attempts[email] || { count:0, lockUntil:0 };
+    rec.count += 1;
+    if(rec.count >= MAX_LOGIN_ATTEMPTS){
+      rec.lockUntil = Date.now() + LOCKOUT_MS;
+      rec.count = 0;
+    }
+    attempts[email] = rec;
+    saveAttempts(attempts);
+  }
+  function clearAttempts(email){
+    const attempts = getAttempts();
+    delete attempts[email];
+    saveAttempts(attempts);
+  }
+
+  /* ---------- LUPA PASSWORD: kode reset dikirim ke Gmail pemilik akun ----------
+     Pengiriman email sungguhan dilakukan lewat EmailJS (SDK di-load di <head>).
+     Kredensial di sini cuma Public Key + Service ID + Template ID — semuanya memang
+     dirancang aman ditaruh di sisi client, BUKAN password/App Password akun Gmail
+     siapa pun. Tidak ada login otomatis ke akun Gmail mana pun di sini. */
+  const EMAILJS_SERVICE_ID = 'service_9ofr3c7';
+  const EMAILJS_TEMPLATE_ID = 'template_wiwuh1g';
+
+  window.fbSendPasswordResetEmail = async function(email, code){
+    // Template EmailJS pakai variabel {{email}} dan {{otp_code}}
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      email: email,
+      otp_code: code
+    });
+  };
+
+  const RESET_KEY = 'lordshop_reset_codes';
+  const RESET_ATTEMPTS_KEY = 'lordshop_reset_attempts';
+  const RESET_CODE_TTL_MS = 15 * 60 * 1000;      // kode berlaku 15 menit
+  const RESET_RESEND_COOLDOWN_MS = 60 * 1000;    // jeda 60 detik sebelum boleh kirim ulang
+  const MAX_RESET_ATTEMPTS = 5;
+
+  function getResetCodes(){
+    try{ return JSON.parse(localStorage.getItem(RESET_KEY)) || {}; }catch(e){ return {}; }
+  }
+  function saveResetCodes(codes){
+    try{ localStorage.setItem(RESET_KEY, JSON.stringify(codes)); }catch(e){}
+  }
+  function getResetAttempts(){
+    try{ return JSON.parse(localStorage.getItem(RESET_ATTEMPTS_KEY)) || {}; }catch(e){ return {}; }
+  }
+  function saveResetAttempts(attempts){
+    try{ localStorage.setItem(RESET_ATTEMPTS_KEY, JSON.stringify(attempts)); }catch(e){}
+  }
+  function generateResetCode(){
+    const bytes = new Uint8Array(4);
+    if(window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
+    else for(let i=0;i<bytes.length;i++) bytes[i] = Math.floor(Math.random()*256);
+    const n = (new DataView(bytes.buffer)).getUint32(0) % 1000000;
+    return String(n).padStart(6, '0');
+  }
+
+  let forgotEmailPending = '';
+  let lastResetSentAt = 0;
+
+  async function requestPasswordReset(){
+    if(!captchaPassed){ toast('Verifikasi captcha dulu sebelum reset password.'); return; }
+    const errorEl = document.getElementById('forgotStep1Error');
+    errorEl.classList.remove('show');
+
+    const email = document.getElementById('forgotEmailInput').value.trim().toLowerCase();
+    if(!isValidGmail(email)){
+      errorEl.textContent = 'Email harus pakai domain @gmail.com.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    const now = Date.now();
+    if(now - lastResetSentAt < RESET_RESEND_COOLDOWN_MS && forgotEmailPending === email){
+      const secs = Math.ceil((RESET_RESEND_COOLDOWN_MS - (now - lastResetSentAt)) / 1000);
+      errorEl.textContent = `Tunggu ${secs} detik lagi sebelum minta kode baru.`;
+      errorEl.classList.add('show');
+      return;
+    }
+
+    // Kode HANYA benar-benar dibuat & (coba) dikirim kalau emailnya memang terdaftar.
+    // Tapi pesan yang ditampilkan ke pembeli dibuat sama saja di kedua kasus, supaya
+    // orang lain ga bisa dipakai buat cek email siapa saja yang punya akun di sini.
+    const accounts = getAccounts();
+    if(accounts[email]){
+      const code = generateResetCode();
+      const codeHash = await hashPassword(code, 'reset:' + email);
+      const codes = getResetCodes();
+      codes[email] = { codeHash, expiresAt: now + RESET_CODE_TTL_MS };
+      saveResetCodes(codes);
+      const resetAttempts = getResetAttempts();
+      delete resetAttempts[email];
+      saveResetAttempts(resetAttempts);
+
+      if(typeof window.fbSendPasswordResetEmail === 'function'){
+        try{ await window.fbSendPasswordResetEmail(email, code); }
+        catch(e){ console.error('Gagal kirim email reset password:', e); }
+      } else {
+        console.warn(
+          '[LORDSHOP] window.fbSendPasswordResetEmail belum disambungkan ke backend pengirim email. ' +
+          'Kode reset untuk ' + email + ' sudah dibuat tapi TIDAK dikirim ke mana pun. ' +
+          'Sambungkan hook ini ke Cloud Function / layanan email transaksional sebelum dipakai pembeli sungguhan.'
+        );
+      }
+    }
+
+    forgotEmailPending = email;
+    lastResetSentAt = now;
+    document.getElementById('forgotEmailDisplay').textContent = email;
+    document.getElementById('forgotStep1').style.display = 'none';
+    document.getElementById('forgotStep2').style.display = 'block';
+    document.getElementById('forgotCodeInput').value = '';
+    document.getElementById('forgotNewPasswordInput').value = '';
+    document.getElementById('forgotNewPasswordConfirmInput').value = '';
+    toast('Kalau email terdaftar, kode reset sudah dikirim ke Gmail-nya.');
+  }
+
+  function resendPasswordReset(){
+    if(!forgotEmailPending){ switchAuthTab('forgot'); return; }
+    document.getElementById('forgotEmailInput').value = forgotEmailPending;
+    requestPasswordReset();
+  }
+
+  async function confirmPasswordReset(){
+    const errorEl = document.getElementById('forgotStep2Error');
+    const okEl = document.getElementById('forgotStep2Ok');
+    errorEl.classList.remove('show'); okEl.classList.remove('show');
+
+    const email = forgotEmailPending;
+    if(!email){
+      errorEl.textContent = 'Sesi reset kadaluwarsa, silakan ulangi dari awal.';
+      errorEl.classList.add('show');
+      switchAuthTab('forgot');
+      return;
+    }
+
+    // Anti brute-force nebak kode 6 digit
+    const attempts = getResetAttempts();
+    const rec = attempts[email] || { count:0, lockUntil:0 };
+    if(rec.lockUntil && rec.lockUntil > Date.now()){
+      const secs = Math.ceil((rec.lockUntil - Date.now()) / 1000);
+      errorEl.textContent = `Terlalu banyak percobaan salah. Coba lagi dalam ${secs} detik.`;
+      errorEl.classList.add('show');
+      return;
+    }
+
+    const code = document.getElementById('forgotCodeInput').value.trim();
+    const newPassword = document.getElementById('forgotNewPasswordInput').value;
+    const confirmPassword = document.getElementById('forgotNewPasswordConfirmInput').value;
+
+    if(!/^\d{6}$/.test(code)){
+      errorEl.textContent = 'Kode reset harus 6 digit angka.';
+      errorEl.classList.add('show');
+      return;
+    }
+    const pwError = validatePasswordStrength(newPassword);
+    if(pwError){ errorEl.textContent = pwError; errorEl.classList.add('show'); return; }
+    if(newPassword !== confirmPassword){
+      errorEl.textContent = 'Konfirmasi password baru tidak sama.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    const codes = getResetCodes();
+    const entry = codes[email];
+    if(!entry || entry.expiresAt < Date.now()){
+      errorEl.textContent = 'Kode sudah kadaluwarsa. Klik "Kirim ulang kode" untuk minta kode baru.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    const codeHash = await hashPassword(code, 'reset:' + email);
+    if(codeHash !== entry.codeHash){
+      rec.count = (rec.count || 0) + 1;
+      if(rec.count >= MAX_RESET_ATTEMPTS){
+        rec.lockUntil = Date.now() + LOCKOUT_MS;
+        rec.count = 0;
+      }
+      attempts[email] = rec;
+      saveResetAttempts(attempts);
+      errorEl.textContent = 'Kode reset salah.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    // Kode valid -> ganti password akun dengan salt baru, lalu bersihkan kode & percobaan
+    const accounts = getAccounts();
+    const account = accounts[email];
+    if(!account){
+      errorEl.textContent = 'Akun tidak ditemukan. Silakan Daftar dulu.';
+      errorEl.classList.add('show');
+      return;
+    }
+    const newSalt = generateSalt();
+    account.passwordHash = await hashPassword(newPassword, newSalt);
+    account.salt = newSalt;
+    accounts[email] = account;
+    saveAccounts(accounts);
+
+    delete codes[email];
+    saveResetCodes(codes);
+    delete attempts[email];
+    saveResetAttempts(attempts);
+    forgotEmailPending = '';
+
+    okEl.textContent = 'Password berhasil diganti! Silakan masuk pakai password baru kamu.';
+    okEl.classList.add('show');
+    toast('Password berhasil direset. Silakan masuk lagi.');
+
+    setTimeout(()=>{
+      switchAuthTab('login');
+      document.getElementById('loginEmailInput').value = email;
+    }, 1200);
+  }
+
 
   function persistSession(user){
     try{ localStorage.setItem('lordshop_session', JSON.stringify(user)); }catch(e){}
@@ -1581,9 +2034,140 @@
 
   function loginAsGuest(){
     if(!captchaPassed){ toast('Verifikasi captcha dulu sebelum melanjutkan.'); return; }
+    // Login Tamu TIDAK membuat/menyimpan data akun apa pun ke daftar akun (ACCOUNTS_KEY).
+    // Sesi tamu ini cuma dikenali lewat id acak, jadi kalau logout / ganti perangkat,
+    // tidak ada data yang bisa dipakai untuk "masuk lagi" seperti akun terdaftar.
     const guestId = getOrCreateGuestId();
     const guestName = 'Tamu-' + guestId.slice(-4);
     setUser({ type:'guest', userId: guestId, name: guestName, nameChangeCount:0, lastNameChangeAt:null });
+    closeLoginModal();
+  }
+
+  /* ---------- TAB: MASUK vs DAFTAR (terpisah) ---------- */
+  function switchAuthTab(tab){
+    const isRegister = tab === 'register';
+    const isForgot = tab === 'forgot';
+    const isLogin = tab === 'login';
+    document.getElementById('tabBtnLogin').classList.toggle('active', isLogin);
+    document.getElementById('tabBtnRegister').classList.toggle('active', isRegister);
+    const tabsBar = document.querySelector('.auth-tabs');
+    if(tabsBar) tabsBar.style.display = isForgot ? 'none' : 'flex';
+    document.getElementById('authViewLogin').classList.toggle('active', isLogin);
+    document.getElementById('authViewRegister').classList.toggle('active', isRegister);
+    document.getElementById('authViewForgot').classList.toggle('active', isForgot);
+    document.getElementById('authModalTitle').textContent = isForgot ? 'Lupa Password' : isRegister ? 'Buat Akun Baru' : 'Masuk ke Akun';
+    document.getElementById('authModalSubtitle').textContent = isForgot
+      ? 'Reset password akun pakai kode yang dikirim ke Gmail kamu.'
+      : isRegister
+        ? 'Daftar sekali, dan datamu tersimpan untuk login berikutnya.'
+        : 'Masuk untuk menyimpan dan memantau riwayat pesanan kamu.';
+    // bersihkan pesan error/ok tiap ganti tab biar ga nyangkut dari percobaan sebelumnya
+    const le = document.getElementById('loginAccountError'); if(le){ le.classList.remove('show'); le.textContent=''; }
+    const re = document.getElementById('registerError'); if(re){ re.classList.remove('show'); re.textContent=''; }
+    const ro = document.getElementById('registerOk'); if(ro){ ro.classList.remove('show'); ro.textContent=''; }
+    const fe1 = document.getElementById('forgotStep1Error'); if(fe1){ fe1.classList.remove('show'); fe1.textContent=''; }
+    const fe2 = document.getElementById('forgotStep2Error'); if(fe2){ fe2.classList.remove('show'); fe2.textContent=''; }
+    const fo2 = document.getElementById('forgotStep2Ok'); if(fo2){ fo2.classList.remove('show'); fo2.textContent=''; }
+    if(isForgot){
+      // tiap masuk ke view ini, selalu mulai dari step 1 (input email)
+      document.getElementById('forgotStep1').style.display = 'block';
+      document.getElementById('forgotStep2').style.display = 'none';
+    }
+  }
+
+  /* ---------- DAFTAR: bikin akun baru pakai email + username + password sendiri ----------
+     Ini untuk pembeli yang BELUM PERNAH login/daftar sebelumnya. Setelah daftar,
+     datanya tersimpan (di ACCOUNTS_KEY) supaya lain kali mau login lagi tinggal
+     isi email + password ini (password baru buatan sendiri, bukan password email/Gmail). */
+  async function registerAccount(){
+    if(!captchaPassed){ toast('Verifikasi captcha dulu sebelum daftar.'); return; }
+    const errorEl = document.getElementById('registerError');
+    const okEl = document.getElementById('registerOk');
+    errorEl.classList.remove('show'); okEl.classList.remove('show');
+
+    const username = document.getElementById('regUsernameInput').value.trim();
+    const email = document.getElementById('regEmailInput').value.trim().toLowerCase();
+    const password = document.getElementById('regPasswordInput').value;
+    const confirm = document.getElementById('regPasswordConfirmInput').value;
+
+    if(!username){ errorEl.textContent = 'Nama/username wajib diisi.'; errorEl.classList.add('show'); return; }
+    if(!isValidGmail(email)){ errorEl.textContent = 'Email harus pakai domain @gmail.com.'; errorEl.classList.add('show'); return; }
+    const pwError = validatePasswordStrength(password);
+    if(pwError){ errorEl.textContent = pwError; errorEl.classList.add('show'); return; }
+    if(password !== confirm){ errorEl.textContent = 'Konfirmasi password tidak sama.'; errorEl.classList.add('show'); return; }
+
+    const accounts = getAccounts();
+    if(accounts[email]){
+      errorEl.textContent = 'Email ini sudah terdaftar. Silakan masuk lewat tab "Masuk".';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    const salt = generateSalt();
+    const passwordHash = await hashPassword(password, salt);
+    accounts[email] = { username, email, passwordHash, salt, createdAt: Date.now() };
+    saveAccounts(accounts);
+    clearAttempts(email);
+
+    okEl.textContent = 'Akun berhasil dibuat! Kamu langsung masuk.';
+    okEl.classList.add('show');
+
+    setUser({ type:'account', userId: email, name: username, email, nameChangeCount:0, lastNameChangeAt:null });
+    closeLoginModal();
+    toast('Akun berhasil dibuat & masuk sebagai ' + username);
+  }
+
+  /* ---------- MASUK: login dengan akun yang sudah pernah didaftarkan (email + password) ---------- */
+  async function loginWithAccount(){
+    if(!captchaPassed){ toast('Verifikasi captcha dulu sebelum masuk.'); return; }
+    const errorEl = document.getElementById('loginAccountError');
+    errorEl.classList.remove('show');
+
+    const email = document.getElementById('loginEmailInput').value.trim().toLowerCase();
+    const password = document.getElementById('loginPasswordInput').value;
+
+    if(!email || !password){
+      errorEl.textContent = 'Isi email dan password akun kamu dulu.';
+      errorEl.classList.add('show');
+      return;
+    }
+    if(!isValidGmail(email)){
+      errorEl.textContent = 'Email harus pakai domain @gmail.com.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    // Anti brute-force: kalau akun ini baru saja gagal login berkali-kali, tahan dulu
+    // sebentar sebelum boleh coba lagi — biar orang iseng ga bisa asal tebak password terus-terusan.
+    const lockRemaining = getLockRemaining(email);
+    if(lockRemaining > 0){
+      const secs = Math.ceil(lockRemaining / 1000);
+      errorEl.textContent = `Terlalu banyak percobaan gagal. Coba lagi dalam ${secs} detik.`;
+      errorEl.classList.add('show');
+      return;
+    }
+
+    const accounts = getAccounts();
+    const account = accounts[email];
+    if(!account){
+      // Pesan sengaja dibuat generik (bukan "email tidak ditemukan" vs "password salah")
+      // supaya orang lain ga bisa dipakai buat cek email siapa saja yang sudah punya akun di sini.
+      errorEl.textContent = 'Email atau password salah.';
+      errorEl.classList.add('show');
+      registerFailedAttempt(email);
+      return;
+    }
+
+    const passwordHash = await hashPassword(password, account.salt || email);
+    if(passwordHash !== account.passwordHash){
+      errorEl.textContent = 'Email atau password salah.';
+      errorEl.classList.add('show');
+      registerFailedAttempt(email);
+      return;
+    }
+
+    clearAttempts(email);
+    setUser({ type:'account', userId: email, name: account.username, email, nameChangeCount:0, lastNameChangeAt:null });
     closeLoginModal();
   }
 
@@ -1623,7 +2207,7 @@
         <div class="user-avatar">${avatar}</div>
         <span class="user-name">${escapeHtml(currentUser.name)}</span>
         <div class="user-menu" id="userMenu">
-          <div class="badge-role">${currentUser.type === 'google' ? 'Akun Google' : 'Akun Tamu'}</div>
+          <div class="badge-role">${currentUser.type === 'google' ? 'Akun Google' : currentUser.type === 'account' ? 'Akun Terdaftar' : 'Akun Tamu'}</div>
           <button onclick="openOrders()">Pesanan Saya</button>
           <button onclick="logout()">Keluar</button>
         </div>
@@ -1684,6 +2268,15 @@
     const input = document.getElementById('captchaInput');
     if(input) input.value = '';
     generateCaptcha();
+
+    // tiap modal dibuka lagi, mulai dari tab "Masuk" dan bersihkan form sebelumnya
+    switchAuthTab('login');
+    ['loginEmailInput','loginPasswordInput','regUsernameInput','regEmailInput','regPasswordInput','regPasswordConfirmInput',
+     'forgotEmailInput','forgotCodeInput','forgotNewPasswordInput','forgotNewPasswordConfirmInput'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.value = '';
+    });
+    forgotEmailPending = '';
   }
 
   function generateCaptcha(){
@@ -2288,7 +2881,7 @@
     document.getElementById('accAvatar').innerHTML = currentUser.picture
       ? `<img src="${currentUser.picture}" alt="">` : initials;
     document.getElementById('accName').textContent = currentUser.name;
-    document.getElementById('accType').textContent = currentUser.type === 'google' ? 'Akun Google' : 'Akun Tamu';
+    document.getElementById('accType').textContent = currentUser.type === 'google' ? 'Akun Google' : currentUser.type === 'account' ? 'Akun Terdaftar' : 'Akun Tamu';
     document.getElementById('nameEditBox').classList.remove('open');
     document.getElementById('nameEditError').classList.remove('show');
     renderAccountVoucherStatus();
@@ -2479,6 +3072,16 @@
       openLoginModal();
       return;
     }
+    if(currentUser.type === 'guest'){
+      // Akun Tamu tidak boleh beli voucher diskon. Arahkan ke modal Daftar/Masuk —
+      // kalau mereka daftar/masuk akun baru di sini, pembelian voucher akan lanjut otomatis.
+      toast('Akun Tamu tidak bisa beli voucher diskon. Silakan Daftar dulu (atau Masuk kalau sudah punya akun).');
+      pendingVoucherPurchase = true;
+      closeAccountModal();
+      openLoginModal();
+      switchAuthTab('register');
+      return;
+    }
     startVoucherCheckout();
   }
 
@@ -2545,6 +3148,18 @@
   function renderAccountVoucherStatus(){
     const el = document.getElementById('voucherStatusText');
     if(!el) return;
+    const buyBtn = document.getElementById('buyVoucherBtn');
+
+    // Fitur voucher diskon cuma untuk akun terdaftar (Google atau akun email+password),
+    // bukan akun Tamu — soalnya sesi Tamu ga tersimpan permanen jadi rawan bermasalah
+    // kalau voucher berbayar dikaitkan ke sesi yang bisa hilang begitu saja.
+    if(currentUser && currentUser.type === 'guest'){
+      el.innerHTML = 'Fitur voucher diskon biaya admin hanya untuk akun terdaftar. Silakan <b>Daftar</b> (atau <b>Masuk</b> kalau sudah punya akun) dulu untuk bisa beli/pakai voucher.';
+      if(buyBtn){ buyBtn.disabled = true; buyBtn.style.opacity = '0.5'; buyBtn.style.cursor = 'not-allowed'; }
+      return;
+    }
+    if(buyBtn){ buyBtn.disabled = false; buyBtn.style.opacity = ''; buyBtn.style.cursor = ''; }
+
     const v = getActiveVoucherInfo();
     if(!v){
       el.innerHTML = 'Belum ada voucher aktif. Beli kode untuk gratis biaya admin selama 3 hari di setiap pembelian.';
