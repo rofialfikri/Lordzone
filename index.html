@@ -2,6 +2,9 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1554,7 +1557,7 @@
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import {
     getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
-    GoogleAuthProvider, signInWithPopup
+    GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -1610,13 +1613,75 @@
   // Login Google untuk PELANGGAN BIASA. Mengembalikan profil yang sudah
   // diverifikasi Firebase (uid/email/name/picture) -- bukan hasil decode
   // token manual seperti kode lama, jadi tidak bisa dipalsukan dari console.
+  //
+  // DETEKSI PERANGKAT: signInWithPopup sering gagal/tidak stabil di browser
+  // HP (popup gampang diblokir, cookie pihak ketiga sering dibatasi, dsb --
+  // penyebab umum auth/internal-error). Firebase sendiri merekomendasikan
+  // signInWithRedirect untuk mobile. Jadi di sini otomatis dipilih sesuai
+  // jenis perangkat: HP -> redirect (pindah halaman ke Google lalu balik
+  // otomatis), Laptop/PC -> popup (lebih cepat, tidak perlu reload halaman).
+  function isMobileDevice(){
+    const uaMobile = /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // Cadangan: kalau user-agent gagal kedeteksi (mis. mode "Desktop site"
+    // aktif, atau UA browser tertentu tidak cocok pola di atas), tetap
+    // anggap HP kalau perangkatnya layar sentuh DAN layarnya sempit.
+    let touchNarrow = false;
+    try{
+      touchNarrow = (navigator.maxTouchPoints > 0) && window.innerWidth <= 820;
+    }catch(e){}
+    return uaMobile || touchNarrow;
+  }
+
   window.fbUserGoogleSignIn = async function(){
+    if(isMobileDevice()){
+      // Redirect: halaman akan pindah ke Google, lalu Google mengarahkan
+      // balik ke halaman ini secara otomatis. Hasilnya TIDAK didapat di sini,
+      // melainkan lewat fbCheckRedirectResult() yang jalan pas halaman dimuat
+      // ulang (lihat pemanggilannya di initFirebaseRedirectCheck di bawah).
+      try{
+        await signInWithRedirect(auth, googleProvider);
+        return { ok:true, pending:true }; // halaman akan pindah, baris ini praktis tidak sempat dipakai
+      }catch(e){
+        return { ok:false, code: e && e.code };
+      }
+    }
     try{
       const result = await signInWithPopup(auth, googleProvider);
       const u = result.user;
       return { ok:true, uid:u.uid, email:u.email, name:u.displayName, picture:u.photoURL };
     }catch(e){
-      return { ok:false, code: e && e.code };
+      const code = e && e.code;
+      if(code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request'){
+        // User sendiri yang batalkan popupnya -- jangan lanjut ke redirect.
+        return { ok:false, code };
+      }
+      // Popup gagal/diblokir/error (mis. auth/internal-error, auth/popup-blocked)
+      // -- coba jalur redirect sebagai cadangan, supaya tidak 100% bergantung
+      // pada deteksi perangkat di atas saja.
+      try{
+        await signInWithRedirect(auth, googleProvider);
+        return { ok:true, pending:true };
+      }catch(e2){
+        return { ok:false, code: e2 && e2.code };
+      }
+    }
+  };
+
+  // Dipanggil sekali saat halaman dimuat, buat cek apakah user baru saja
+  // balik dari alur signInWithRedirect (khusus HP). Kalau ada hasilnya,
+  // callback dipanggil dengan profil user -- kalau tidak ada (kasus normal,
+  // bukan habis redirect), callback dipanggil dengan null dan tidak terjadi apa-apa.
+  window.fbCheckRedirectResult = async function(callback){
+    try{
+      const result = await getRedirectResult(auth);
+      if(result && result.user){
+        const u = result.user;
+        callback({ ok:true, uid:u.uid, email:u.email, name:u.displayName, picture:u.photoURL });
+      } else {
+        callback(null);
+      }
+    }catch(e){
+      callback({ ok:false, code: e && e.code });
     }
   };
   window.fbUserSignOut = async function(){
@@ -2141,10 +2206,12 @@
   }
 
   async function loginWithGoogle(){
-    if(!captchaPassed){
-      toast('Verifikasi captcha dulu sebelum login dengan Google.');
-      return;
-    }
+    // Captcha TIDAK diwajibkan di sini (beda dari login email/password & daftar
+    // di bawah) -- proses login Google sudah diverifikasi langsung oleh
+    // Google/Firebase sendiri (user harus pilih akun Google asli & lolos
+    // pengecekan Google), jadi sudah aman dari bot tanpa captcha tambahan.
+    // Mewajibkan captcha di sini cuma nambah friksi & rawan bikin user
+    // mengira tombolnya rusak padahal cuma lupa verifikasi captcha dulu.
     if(!window.fbUserGoogleSignIn){
       toast('Koneksi ke server login belum siap. Coba muat ulang halaman.');
       return;
@@ -2159,7 +2226,13 @@
         // User membatalkan sendiri popupnya -- tidak perlu tampilkan error.
         return;
       }
-      toast('DEBUG error: ' + (result.code || 'tidak ada kode error'));
+      toast('DEBUG: ' + (result.code || 'tidak ada kode error'));
+      return;
+    }
+    if(result.pending){
+      // Khusus HP: halaman akan pindah ke Google sebentar lagi, jadi belum
+      // ada data user di titik ini. Hasil aslinya baru didapat lewat
+      // fbCheckRedirectResult() setelah halaman ini dimuat ulang.
       return;
     }
     setUser({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null });
@@ -3931,6 +4004,22 @@
   initMaintenanceWatch();
   initStatCounters();
   initAdModal();
+
+  // Cek apakah halaman ini baru saja dimuat ulang gara-gara balik dari alur
+  // signInWithRedirect (khusus HP -- lihat isMobileDevice() di atas). Kalau
+  // ada hasilnya, langsung anggap user sudah login, sama seperti alur popup
+  // di laptop/PC. Kalau tidak ada (kasus normal), tidak terjadi apa-apa.
+  if(window.fbCheckRedirectResult){
+    window.fbCheckRedirectResult(function(result){
+      if(!result) return; // bukan habis redirect, biasa saja
+      if(!result.ok){
+        toast('DEBUG-redirect: ' + (result.code || 'tidak ada kode error'));
+        return;
+      }
+      setUser({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null });
+      closeLoginModal();
+    });
+  }
   /* ---------- PULL TO REFRESH: tarik dari paling atas buat refresh halaman ---------- */
   function initPullToRefresh(){
     const indicator = document.getElementById('ptrIndicator');
