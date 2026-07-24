@@ -871,6 +871,7 @@
     emailjs.init({ publicKey: "B3ac6LPbLHfDmXkJ_" });
   })();
 </script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -1278,6 +1279,14 @@
             <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.4 29.4 35.5 24 35.5c-6.4 0-11.5-5.1-11.5-11.5S17.6 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l6-6C33.9 5.9 29.2 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.9 19 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l6-6C33.9 5.9 29.2 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.7 13.5-4.7l-6.2-5.3C29.3 35.5 26.8 36.5 24 36.5c-5.3 0-9.8-3.1-11.3-7.5l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.5 5.6-6.5 7l6.2 5.3C38.5 37.6 42 31.5 42 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
             <span>Masuk dengan Google</span>
           </button>
+          <!-- Tombol ASLI dari Google Identity Services -- disembunyikan secara visual
+               (bukan display:none, supaya browser tetap mau memprosesnya sebagai
+               tombol sungguhan), lalu diklik otomatis lewat JS begitu tombol
+               custom di atas ditekan. Seluruh proses auth-nya terjadi di domain
+               accounts.google.com sendiri, jadi tidak butuh iframe/storage relay
+               dari authDomain project Firebase -- ini yang bikin lebih stabil
+               dibanding signInWithPopup/signInWithRedirect di HP. -->
+          <div id="gsiButtonContainer" style="position:absolute; width:1px; height:1px; overflow:hidden; opacity:0.01; pointer-events:none;"></div>
         </div>
         
         <div class="divider">atau masuk pakai akun</div>
@@ -1557,7 +1566,7 @@
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import {
     getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
-    GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult
+    GoogleAuthProvider, signInWithCredential
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -1584,7 +1593,6 @@
      koleksi Firestore "admins/{uid}" -- BUKAN sekadar "sedang login atau
      tidak". Dokumen ini harus dibuat manual di Firestore Console untuk UID
      akun admin saja. Lihat catatan Firestore Rules di atas. */
-  const googleProvider = new GoogleAuthProvider();
 
   window.fbAdminSignIn = async function(email, password){
     try{
@@ -1614,72 +1622,82 @@
   // diverifikasi Firebase (uid/email/name/picture) -- bukan hasil decode
   // token manual seperti kode lama, jadi tidak bisa dipalsukan dari console.
   //
-  // DETEKSI PERANGKAT: signInWithPopup sering gagal/tidak stabil di browser
-  // HP (popup gampang diblokir, cookie pihak ketiga sering dibatasi, dsb --
-  // penyebab umum auth/internal-error). Firebase sendiri merekomendasikan
-  // signInWithRedirect untuk mobile. Jadi di sini otomatis dipilih sesuai
-  // jenis perangkat: HP -> redirect (pindah halaman ke Google lalu balik
-  // otomatis), Laptop/PC -> popup (lebih cepat, tidak perlu reload halaman).
-  function isMobileDevice(){
-    const uaMobile = /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    // Cadangan: kalau user-agent gagal kedeteksi (mis. mode "Desktop site"
-    // aktif, atau UA browser tertentu tidak cocok pola di atas), tetap
-    // anggap HP kalau perangkatnya layar sentuh DAN layarnya sempit.
-    let touchNarrow = false;
+  // KENAPA PAKAI GOOGLE IDENTITY SERVICES (GIS), BUKAN signInWithPopup/
+  // signInWithRedirect: dua metode itu butuh iframe/storage relay dari
+  // authDomain project Firebase (bisnis-1724f.firebaseapp.com) buat
+  // menyimpan status login. Banyak browser HP modern (termasuk Chrome
+  // Android) sekarang membatasi penyimpanan lintas-domain semacam itu demi
+  // privasi, sehingga proses itu sering gagal diam-diam atau error
+  // "storage-partitioned browser environment". GIS mengerjakan seluruh
+  // proses otentikasi di domain accounts.google.com milik Google sendiri
+  // (lewat tombol asli Google, cuma disembunyikan tampilannya lalu diklik
+  // otomatis lewat loginWithGoogle di bawah), baru menyerahkan hasilnya
+  // (JWT idToken) ke Firebase lewat signInWithCredential -- jadi tidak
+  // pernah butuh penyimpanan lintas-domain sama sekali.
+  const GOOGLE_WEB_CLIENT_ID = '559749643999-di1igas9vur4m7e3sa6m58punt8fa3fv.apps.googleusercontent.com';
+  let gsiReady = false;
+
+  function initGoogleIdentityServices(){
+    if(!window.google || !google.accounts || !google.accounts.id){
+      // Script https://accounts.google.com/gsi/client belum selesai dimuat --
+      // coba lagi sebentar. Wajar terjadi sesaat setelah halaman baru dibuka.
+      setTimeout(initGoogleIdentityServices, 300);
+      return;
+    }
+    google.accounts.id.initialize({
+      client_id: GOOGLE_WEB_CLIENT_ID,
+      callback: handleGoogleCredentialResponse,
+      auto_select: false,
+      itp_support: true
+    });
+    // Tombol asli Google dirender ke wadah tersembunyi (lihat #gsiButtonContainer
+    // di HTML) -- ini yang sungguh-sungguh diklik lewat loginWithGoogle().
+    google.accounts.id.renderButton(document.getElementById('gsiButtonContainer'), {
+      type: 'standard', theme: 'outline', size: 'large'
+    });
+    gsiReady = true;
+  }
+  initGoogleIdentityServices();
+
+  // Dipanggil otomatis oleh Google Identity Services setelah user memilih
+  // akun Google-nya. response.credential berisi JWT idToken yang sudah
+  // ditandatangani Google -- diserahkan ke Firebase Auth lewat
+  // signInWithCredential supaya identitasnya diverifikasi ulang di server
+  // Firebase (bukan sekadar dipercaya mentah-mentah dari client).
+  async function handleGoogleCredentialResponse(response){
     try{
-      touchNarrow = (navigator.maxTouchPoints > 0) && window.innerWidth <= 820;
-    }catch(e){}
-    return uaMobile || touchNarrow;
+      const idToken = response && response.credential;
+      if(!idToken) throw new Error('idToken kosong dari Google');
+      const credential = GoogleAuthProvider.credential(idToken);
+      const result = await signInWithCredential(auth, credential);
+      const u = result.user;
+      window.fbGoogleSignInResultHandler && window.fbGoogleSignInResultHandler({
+        ok:true, uid:u.uid, email:u.email, name:u.displayName, picture:u.photoURL
+      });
+    }catch(e){
+      window.fbGoogleSignInResultHandler && window.fbGoogleSignInResultHandler({ ok:false, code: e && (e.code || e.message) });
+    }
   }
 
-  window.fbUserGoogleSignIn = async function(){
-    // Popup dipakai sebagai jalur UTAMA untuk semua perangkat (termasuk HP) --
-    // sebelumnya kode ini otomatis pindah ke signInWithRedirect khusus HP, tapi
-    // ternyata itu punya kelemahan: di sejumlah browser HP modern, hasil
-    // redirect kadang gagal diambil kembali SECARA DIAM-DIAM (tanpa error sama
-    // sekali) gara-gara pembatasan penyimpanan/cookie pihak ketiga milik
-    // browser -- membuat tombol "Masuk" seolah tidak bereaksi apa pun.
-    // Popup langsung memberi hasil di tempat, jadi jauh lebih bisa diandalkan.
-    // Redirect tetap disiapkan sebagai CADANGAN, hanya dipakai kalau popup-nya
-    // sendiri gagal terbuka/diblokir.
-    try{
-      const result = await signInWithPopup(auth, googleProvider);
-      const u = result.user;
-      return { ok:true, uid:u.uid, email:u.email, name:u.displayName, picture:u.photoURL };
-    }catch(e){
-      const code = e && e.code;
-      if(code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request'){
-        // User sendiri yang batalkan popupnya -- jangan lanjut ke redirect.
-        return { ok:false, code };
-      }
-      // Popup gagal/diblokir/error (mis. auth/internal-error, auth/popup-blocked)
-      // -- baru di sini coba jalur redirect sebagai cadangan.
-      try{
-        await signInWithRedirect(auth, googleProvider);
-        return { ok:true, pending:true };
-      }catch(e2){
-        return { ok:false, code: e2 && e2.code };
-      }
+  // Dipanggil dari tombol custom "Masuk dengan Google" (lihat loginWithGoogle
+  // di bawah). Meng-klik tombol ASLI Google yang sudah dirender tersembunyi --
+  // ini yang memicu jendela pilih akun Google, di domain Google sendiri.
+  window.fbTriggerGoogleSignIn = function(){
+    if(!gsiReady){
+      return { ok:false, code:'not-ready' };
     }
+    const realBtn = document.querySelector('#gsiButtonContainer div[role="button"]');
+    if(!realBtn){
+      return { ok:false, code:'button-not-found' };
+    }
+    realBtn.click();
+    return { ok:true };
   };
+  // UI (loginWithGoogle) memasang fungsi ini supaya hasil login (sukses/gagal)
+  // bisa diproses balik ke tampilan, walau prosesnya async lewat callback GIS
+  // di atas, bukan lewat return value langsung seperti signInWithPopup dulu.
+  window.fbGoogleSignInResultHandler = null;
 
-  // Dipanggil sekali saat halaman dimuat, buat cek apakah user baru saja
-  // balik dari alur signInWithRedirect (khusus HP). Kalau ada hasilnya,
-  // callback dipanggil dengan profil user -- kalau tidak ada (kasus normal,
-  // bukan habis redirect), callback dipanggil dengan null dan tidak terjadi apa-apa.
-  window.fbCheckRedirectResult = async function(callback){
-    try{
-      const result = await getRedirectResult(auth);
-      if(result && result.user){
-        const u = result.user;
-        callback({ ok:true, uid:u.uid, email:u.email, name:u.displayName, picture:u.photoURL });
-      } else {
-        callback(null);
-      }
-    }catch(e){
-      callback({ ok:false, code: e && e.code });
-    }
-  };
   window.fbUserSignOut = async function(){
     try{ await signOut(auth); }catch(e){ console.error('Gagal logout dari Firebase:', e); }
   };
@@ -1881,9 +1899,11 @@
 
   function formatRupiah(n){ return 'Rp ' + n.toLocaleString('id-ID'); }
 
-  /* ---------- AUTH: Google (Firebase Auth) & Akun Terdaftar ----------
-     Login Google sekarang diproses lewat Firebase Authentication
-     (window.fbUserGoogleSignIn), yang benar-benar memverifikasi identitas
+  /* ---------- AUTH: Google (Google Identity Services + Firebase Auth) &
+     Akun Terdaftar ----------
+     Login Google sekarang diproses lewat Google Identity Services +
+     signInWithCredential (window.fbTriggerGoogleSignIn /
+     handleGoogleCredentialResponse), yang benar-benar memverifikasi identitas
      di server Google/Firebase -- bukan lagi decode token JWT manual di
      client seperti sebelumnya, jadi tidak bisa dipalsukan dari console
      browser. Login "Tamu" sudah dihapus; sekarang wajib pakai Google atau
@@ -2226,38 +2246,44 @@
     }catch(e){}
   }
 
-  async function loginWithGoogle(){
+  function loginWithGoogle(){
     // Captcha TIDAK diwajibkan di sini (beda dari login email/password & daftar
     // di bawah) -- proses login Google sudah diverifikasi langsung oleh
     // Google/Firebase sendiri (user harus pilih akun Google asli & lolos
     // pengecekan Google), jadi sudah aman dari bot tanpa captcha tambahan.
-    // Mewajibkan captcha di sini cuma nambah friksi & rawan bikin user
-    // mengira tombolnya rusak padahal cuma lupa verifikasi captcha dulu.
-    if(!window.fbUserGoogleSignIn){
+    if(!window.fbTriggerGoogleSignIn){
       toast('Koneksi ke server login belum siap. Coba muat ulang halaman.');
       return;
     }
     const btn = document.getElementById('googleSignInBtn');
     if(btn) btn.disabled = true;
-    const result = await window.fbUserGoogleSignIn();
-    if(btn) btn.disabled = false;
 
-    if(!result.ok){
-      if(result.code === 'auth/popup-closed-by-user'){
-        // User membatalkan sendiri popupnya -- tidak perlu tampilkan error.
+    // Hasil sebenarnya datang ASYNC lewat callback Google Identity Services
+    // (handleGoogleCredentialResponse di script Firebase), bukan return value
+    // langsung -- jadi kita pasang handler-nya di sini dulu.
+    window.fbGoogleSignInResultHandler = function(result){
+      if(btn) btn.disabled = false;
+      window.fbGoogleSignInResultHandler = null;
+      if(!result.ok){
+        toast('Login Google gagal diproses. Coba lagi sebentar lagi.');
         return;
       }
-      toast('Login Google gagal diproses. Coba lagi sebentar lagi.');
+      setUser(applyNameOverride({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null }));
+      closeLoginModal();
+    };
+
+    const trigger = window.fbTriggerGoogleSignIn();
+    if(!trigger.ok){
+      if(btn) btn.disabled = false;
+      window.fbGoogleSignInResultHandler = null;
+      toast('Google Sign-In belum siap, coba muat ulang halaman sebentar lagi.');
       return;
     }
-    if(result.pending){
-      // Khusus HP: halaman akan pindah ke Google sebentar lagi, jadi belum
-      // ada data user di titik ini. Hasil aslinya baru didapat lewat
-      // fbCheckRedirectResult() setelah halaman ini dimuat ulang.
-      return;
-    }
-    setUser(applyNameOverride({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null }));
-    closeLoginModal();
+    // Kalau user menutup sendiri jendela pilih akun Google tanpa memilih apa
+    // pun, Google Identity Services TIDAK memanggil callback sama sekali --
+    // jadi tombol perlu dikembalikan aktif setelah beberapa saat supaya tidak
+    // macet ter-disable selamanya.
+    setTimeout(() => { if(btn && btn.disabled) btn.disabled = false; }, 15000);
   }
 
   let toastTimer = null;
@@ -4026,22 +4052,6 @@
   initMaintenanceWatch();
   initStatCounters();
   initAdModal();
-
-  // Cek apakah halaman ini baru saja dimuat ulang gara-gara balik dari alur
-  // signInWithRedirect (khusus HP -- lihat isMobileDevice() di atas). Kalau
-  // ada hasilnya, langsung anggap user sudah login, sama seperti alur popup
-  // di laptop/PC. Kalau tidak ada (kasus normal), tidak terjadi apa-apa.
-  if(window.fbCheckRedirectResult){
-    window.fbCheckRedirectResult(function(result){
-      if(!result) return; // bukan habis redirect, biasa saja
-      if(!result.ok){
-        toast('Login Google gagal diproses. Coba lagi sebentar lagi.');
-        return;
-      }
-      setUser(applyNameOverride({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null }));
-      closeLoginModal();
-    });
-  }
   /* ---------- PULL TO REFRESH: tarik dari paling atas buat refresh halaman ---------- */
   function initPullToRefresh(){
     const indicator = document.getElementById('ptrIndicator');
