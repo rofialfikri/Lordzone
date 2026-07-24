@@ -1913,6 +1913,31 @@
     try{ localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts)); }catch(e){}
   }
 
+  /* Nama tampilan yang diganti user sendiri (lewat saveNameChange) disimpan
+     terpisah di sini, dikunci berdasarkan userId (email). Ini dipakai supaya
+     nama custom tetap kepakai lagi walau user logout lalu login ulang --
+     baik lewat akun email/password (yang aslinya narik dari accounts[email].username)
+     maupun lewat Google (yang aslinya narik ulang nama dari profil Google
+     setiap kali login), keduanya sebelumnya kehilangan nama custom pas
+     re-login karena tidak ada tempat penyimpanan permanen seperti ini. */
+  const NAME_OVERRIDES_KEY = 'lordshop_name_overrides';
+  function getNameOverrides(){
+    try{ return JSON.parse(localStorage.getItem(NAME_OVERRIDES_KEY)) || {}; }catch(e){ return {}; }
+  }
+  function saveNameOverride(userId, name){
+    try{
+      const overrides = getNameOverrides();
+      overrides[userId] = name;
+      localStorage.setItem(NAME_OVERRIDES_KEY, JSON.stringify(overrides));
+    }catch(e){}
+  }
+  function applyNameOverride(user){
+    if(!user) return user;
+    const overrides = getNameOverrides();
+    if(overrides[user.userId]) user.name = overrides[user.userId];
+    return user;
+  }
+
   function generateSalt(){
     const bytes = new Uint8Array(16);
     if(window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
@@ -2226,7 +2251,7 @@
         // User membatalkan sendiri popupnya -- tidak perlu tampilkan error.
         return;
       }
-      toast('DEBUG: ' + (result.code || 'tidak ada kode error'));
+      toast('Login Google gagal diproses. Coba lagi sebentar lagi.');
       return;
     }
     if(result.pending){
@@ -2235,7 +2260,7 @@
       // fbCheckRedirectResult() setelah halaman ini dimuat ulang.
       return;
     }
-    setUser({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null });
+    setUser(applyNameOverride({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null }));
     closeLoginModal();
   }
 
@@ -2318,7 +2343,7 @@
     okEl.textContent = 'Akun berhasil dibuat! Kamu langsung masuk.';
     okEl.classList.add('show');
 
-    setUser({ type:'account', userId: email, name: username, email, nameChangeCount:0, lastNameChangeAt:null });
+    setUser(applyNameOverride({ type:'account', userId: email, name: username, email, nameChangeCount:0, lastNameChangeAt:null }));
     closeLoginModal();
     toast('Akun berhasil dibuat & masuk sebagai ' + username);
   }
@@ -2373,7 +2398,7 @@
     }
 
     clearAttempts(email);
-    setUser({ type:'account', userId: email, name: account.username, email, nameChangeCount:0, lastNameChangeAt:null });
+    setUser(applyNameOverride({ type:'account', userId: email, name: account.username, email, nameChangeCount:0, lastNameChangeAt:null }));
     closeLoginModal();
   }
 
@@ -3194,6 +3219,7 @@
     currentUser.name = newName;
     currentUser.nameChangeCount = (currentUser.nameChangeCount || 0) + 1;
     currentUser.lastNameChangeAt = Date.now();
+    saveNameOverride(currentUser.userId, newName);
     persistSession(currentUser);
     renderAuthArea();
     document.getElementById('accName').textContent = currentUser.name;
@@ -4013,10 +4039,10 @@
     window.fbCheckRedirectResult(function(result){
       if(!result) return; // bukan habis redirect, biasa saja
       if(!result.ok){
-        toast('DEBUG-redirect: ' + (result.code || 'tidak ada kode error'));
+        toast('Login Google gagal diproses. Coba lagi sebentar lagi.');
         return;
       }
-      setUser({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null });
+      setUser(applyNameOverride({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null }));
       closeLoginModal();
     });
   }
