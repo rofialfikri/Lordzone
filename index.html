@@ -35,7 +35,7 @@
   font-src 'self' https://fonts.gstatic.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com https://cdn.jsdelivr.net;
-  frame-src https://accounts.google.com;
+  frame-src https://accounts.google.com https://bisnis-1724f.firebaseapp.com;
   connect-src 'self' https://accounts.google.com https://www.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://api.emailjs.com https://www.gstatic.com https://cloudflare.com https://www.google.com;
 ">
 <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -2159,7 +2159,7 @@
         // User membatalkan sendiri popupnya -- tidak perlu tampilkan error.
         return;
       }
-      toast('Login Google gagal diproses. Coba lagi sebentar lagi.');
+      toast('DEBUG error: ' + (result.code || 'tidak ada kode error'));
       return;
     }
     setUser({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null });
