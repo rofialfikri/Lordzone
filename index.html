@@ -1633,18 +1633,15 @@
   }
 
   window.fbUserGoogleSignIn = async function(){
-    if(isMobileDevice()){
-      // Redirect: halaman akan pindah ke Google, lalu Google mengarahkan
-      // balik ke halaman ini secara otomatis. Hasilnya TIDAK didapat di sini,
-      // melainkan lewat fbCheckRedirectResult() yang jalan pas halaman dimuat
-      // ulang (lihat pemanggilannya di initFirebaseRedirectCheck di bawah).
-      try{
-        await signInWithRedirect(auth, googleProvider);
-        return { ok:true, pending:true }; // halaman akan pindah, baris ini praktis tidak sempat dipakai
-      }catch(e){
-        return { ok:false, code: e && e.code };
-      }
-    }
+    // Popup dipakai sebagai jalur UTAMA untuk semua perangkat (termasuk HP) --
+    // sebelumnya kode ini otomatis pindah ke signInWithRedirect khusus HP, tapi
+    // ternyata itu punya kelemahan: di sejumlah browser HP modern, hasil
+    // redirect kadang gagal diambil kembali SECARA DIAM-DIAM (tanpa error sama
+    // sekali) gara-gara pembatasan penyimpanan/cookie pihak ketiga milik
+    // browser -- membuat tombol "Masuk" seolah tidak bereaksi apa pun.
+    // Popup langsung memberi hasil di tempat, jadi jauh lebih bisa diandalkan.
+    // Redirect tetap disiapkan sebagai CADANGAN, hanya dipakai kalau popup-nya
+    // sendiri gagal terbuka/diblokir.
     try{
       const result = await signInWithPopup(auth, googleProvider);
       const u = result.user;
@@ -1656,8 +1653,7 @@
         return { ok:false, code };
       }
       // Popup gagal/diblokir/error (mis. auth/internal-error, auth/popup-blocked)
-      // -- coba jalur redirect sebagai cadangan, supaya tidak 100% bergantung
-      // pada deteksi perangkat di atas saja.
+      // -- baru di sini coba jalur redirect sebagai cadangan.
       try{
         await signInWithRedirect(auth, googleProvider);
         return { ok:true, pending:true };
