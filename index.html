@@ -7,6 +7,38 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0A0E1A">
+<!-- ================= HARDENING KEAMANAN (browser-level) =================
+     CSP ini membatasi dari domain mana script/koneksi/frame boleh dimuat,
+     supaya kalaupun ada celah injeksi di suatu tempat, dampaknya jauh lebih
+     terbatas (tidak bisa load script dari domain asing, tidak bisa di-iframe
+     situs lain / clickjacking, dsb).
+     CATATAN JUJUR: karena semua handler di halaman ini pakai onclick="..."
+     inline, 'unsafe-inline' untuk script-src TERPAKSA masih diizinkan --
+     kalau nanti mau proteksi XSS yang lebih penuh, semua onclick="" perlu
+     dipindah ke addEventListener() dan baris 'unsafe-inline' di bawah bisa
+     dihapus. Domain di connect-src/frame-src disesuaikan dengan semua
+     layanan yang dipakai file ini: Firebase/Firestore, Google Identity
+     Services, EmailJS, dan probe konektivitas.
+     CATATAN LAIN: menurut spesifikasi CSP, directive "frame-ancestors" di
+     bawah TIDAK berlaku kalau dikirim lewat <meta> (browser mengabaikannya) --
+     harus dikirim sebagai HTTP response header asli. Kalau hosting kamu
+     mengizinkan custom header (Netlify/Vercel/Nginx/dsb), tambahkan header
+     "Content-Security-Policy" + "X-Frame-Options: DENY" di level server
+     supaya proteksi anti-clickjacking ini benar-benar aktif. -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  base-uri 'self';
+  frame-ancestors 'none';
+  object-src 'none';
+  form-action 'self';
+  img-src 'self' data: https:;
+  font-src 'self' https://fonts.gstatic.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com https://cdn.jsdelivr.net;
+  frame-src https://accounts.google.com;
+  connect-src 'self' https://accounts.google.com https://www.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://api.emailjs.com https://www.gstatic.com https://cloudflare.com https://www.google.com;
+">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>LORDSHOP — Top Up Diamond Mobile Legends</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -705,6 +737,14 @@
     background:none; border:1px solid var(--line); color:var(--text-dim); font-weight:600;
   }
   .order-bar .btn-cancel-pkg:hover{border-color:var(--danger); color:var(--danger);}
+  @media (max-width:480px){
+    .order-bar{ padding:12px 14px; bottom:76px; gap:8px; }
+    .order-bar .info{ font-size:12px; }
+    .order-bar .info b{ font-size:14.5px; }
+    .order-bar-actions{ gap:8px; }
+    .order-bar button{ padding:10px 16px; font-size:13px; }
+    #topup{ padding-bottom:112px; }
+  }
 
   /* ---------- TRUST ---------- */
   .trust{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
@@ -1446,6 +1486,49 @@
 </div>
 
 <!-- ============== FIREBASE: penyimpanan pesanan bersama (cloud) ============== -->
+<!--
+  ================= PALING PENTING: FIRESTORE SECURITY RULES =================
+  File index.html ini TIDAK bisa mengunci akses ke Firestore -- siapa pun bisa
+  buka DevTools dan memanggil SDK Firestore langsung dari console, melewati
+  seluruh UI/JS di file ini (termasuk status isAdmin). Satu-satunya tempat
+  yang benar-benar menegakkan aturan akses adalah Firestore Security Rules,
+  yang diatur terpisah di Firebase Console -> Firestore Database -> Rules
+  (BUKAN di file ini). Tanpa rules yang ketat, siapa pun bisa hapus/ubah
+  seluruh koleksi "orders", "vouchers", dan "maintenance" langsung dari
+  console browser mereka sendiri, apa pun yang dicek oleh JS di index.html.
+
+  Contoh titik awal yang jauh lebih ketat daripada default (silakan sesuaikan
+  nama koleksi/field dengan skema kamu, lalu tempel ke Firebase Console):
+
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        match /orders/{orderId} {
+          allow read: if true;              // riwayat pesanan memang publik di UI
+          allow create: if request.resource.data.keys().hasAll(['userId','pkg','price'])
+                        && request.resource.data.price is number;
+          allow update, delete: if false;   // JANGAN izinkan dari client sama sekali;
+                                             // ubah status/hapus HANYA lewat Cloud Function
+                                             // yang memverifikasi admin di server.
+        }
+        match /vouchers/{voucherId} {
+          allow read: if true;
+          allow write: if false;            // redeem/approve HARUS lewat Cloud Function
+        }
+        match /maintenance/{docId} {
+          allow read: if true;
+          allow write: if false;            // toggle maintenance HARUS lewat Cloud Function
+        }
+      }
+    }
+
+  Idealnya: pindahkan semua aksi "admin" (ubah status, hapus, approve voucher,
+  toggle maintenance) ke Cloud Functions yang memverifikasi identitas admin di
+  server (Firebase Auth custom claim), bukan dipanggil langsung dari browser.
+  Selain itu, batasi juga apiKey Firebase di bawah lewat "API key restrictions"
+  di Google Cloud Console (HTTP referrer = domain website ini saja) sebagai
+  lapisan tambahan.
+-->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import {
@@ -1606,7 +1689,7 @@
     { id:'p18', amount:'704 Diamond', price:194100, badge:'HEMAT' },
     { id:'p19', amount:'960 Diamond', price:258400, badge:'HEMAT' },
     { id:'p20', amount:'1050 Diamond', price:283400, badge:'HEMAT' },
-    { id:'p21', amount:'1342 Diamond', price:363.600, badge:'HEMAT' },
+    { id:'p21', amount:'1342 Diamond', price:363600, badge:'HEMAT' },
     { id:'p22', amount:'1774 Diamond', price:476900, badge:'HEMAT' },
     { id:'p23', amount:'1835 Diamond', price:493200, badge:'HEMAT' },
     { id:'p24', amount:'2904 Diamond', price:751000, badge:'HEMAT' },
@@ -1663,13 +1746,31 @@
 
   function formatRupiah(n){ return 'Rp ' + n.toLocaleString('id-ID'); }
 
-  /* ---------- AUTH: Google & Tamu ---------- */
+  /* ---------- AUTH: Google & Tamu ----------
+     PERINGATAN KEAMANAN: decodeJwtPayload() di bawah HANYA membaca isi token,
+     TIDAK memverifikasi tanda tangan (signature) JWT-nya. Secara normal token
+     ini datang dari popup resmi Google Identity Services, tapi karena
+     handleGoogleLogin() adalah fungsi global (wajib, supaya bisa dipanggil
+     Google sebagai callback), siapa pun bisa membuka console browser dan
+     memanggilnya sendiri dengan token buatan (mengaku sebagai email siapa
+     saja). Validasi tambahan di bawah (struktur token + masa berlaku) cuma
+     mengurangi kasus token asal-asalan/kedaluwarsa -- BUKAN pengganti
+     verifikasi signature. Untuk identitas yang benar-benar bisa dipercaya,
+     verifikasi id_token ini harus dilakukan di server/Cloud Function lewat
+     Google token info endpoint, lalu baru Firestore Rules boleh
+     mengandalkannya untuk keputusan akses. */
   function decodeJwtPayload(token){
     try{
-      const base64Url = token.split('.')[1];
+      const parts = token.split('.');
+      if(parts.length !== 3) return null; // JWT wajib 3 bagian: header.payload.signature
+      const base64Url = parts[1];
       const base64 = base64Url.replace(/-/g,'+').replace(/_/g,'/');
       const json = decodeURIComponent(atob(base64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-      return JSON.parse(json);
+      const payload = JSON.parse(json);
+      // Tolak kalau field wajib tidak ada, atau token sudah lewat masa berlaku (exp).
+      if(!payload || typeof payload.email !== 'string' || !payload.email) return null;
+      if(typeof payload.exp === 'number' && Date.now() >= payload.exp * 1000) return null;
+      return payload;
     }catch(e){ return null; }
   }
 
@@ -2406,6 +2507,43 @@
   const ADMIN_HASH = '2157ea06b7cddcff84e9626caacedca3d82eb08c90162872036da6736086f47d';
   let isAdmin = sessionStorage.getItem('lordshop_admin') === '1';
 
+  /* ---------- ANTI BRUTE-FORCE UNTUK LOGIN ADMIN ----------
+     PENTING: ini cuma memperlambat percobaan tebak-tebakan dari UI biasa.
+     Hash ADMIN_HASH tetap ada di source JS dan bisa dibaca siapa pun lewat
+     DevTools, jadi tetap bisa di-brute-force OFFLINE tanpa lockout ini sama
+     sekali (lockout ini tidak mencegah itu). Perlindungan yang sesungguhnya
+     WAJIB ada di Firestore Security Rules (server-side), bukan di sini --
+     kode ini hanya lapisan tambahan di UI. */
+  const ADMIN_ATTEMPTS_KEY = 'lordshop_admin_attempts';
+  const MAX_ADMIN_ATTEMPTS = 5;
+  const ADMIN_LOCKOUT_MS = 5 * 60 * 1000; // kunci 5 menit, lebih lama dari login akun biasa
+
+  function getAdminAttempts(){
+    try{ return JSON.parse(localStorage.getItem(ADMIN_ATTEMPTS_KEY)) || { count:0, lockUntil:0 }; }
+    catch(e){ return { count:0, lockUntil:0 }; }
+  }
+  function saveAdminAttempts(rec){
+    try{ localStorage.setItem(ADMIN_ATTEMPTS_KEY, JSON.stringify(rec)); }catch(e){}
+  }
+  function getAdminLockRemaining(){
+    const rec = getAdminAttempts();
+    if(!rec.lockUntil) return 0;
+    const remaining = rec.lockUntil - Date.now();
+    return remaining > 0 ? remaining : 0;
+  }
+  function registerFailedAdminAttempt(){
+    const rec = getAdminAttempts();
+    rec.count = (rec.count || 0) + 1;
+    if(rec.count >= MAX_ADMIN_ATTEMPTS){
+      rec.lockUntil = Date.now() + ADMIN_LOCKOUT_MS;
+      rec.count = 0;
+    }
+    saveAdminAttempts(rec);
+  }
+  function clearAdminAttempts(){
+    saveAdminAttempts({ count:0, lockUntil:0 });
+  }
+
   async function sha256Hex(text){
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
@@ -2547,8 +2685,17 @@
       return;
     }
 
+    const lockRemaining = getAdminLockRemaining();
+    if(lockRemaining > 0){
+      const sisaMenit = Math.ceil(lockRemaining / 60000);
+      errEl.textContent = `Terlalu banyak percobaan gagal. Coba lagi dalam ${sisaMenit} menit.`;
+      errEl.style.display = 'block';
+      return;
+    }
+
     const attemptHash = await sha256Hex(`${ADMIN_SALT}:${u}:${p}`);
     if(attemptHash === ADMIN_HASH){
+      clearAdminAttempts();
       isAdmin = true;
       sessionStorage.setItem('lordshop_admin', '1');
       document.getElementById('adminLoginBox').style.display = 'none';
@@ -2565,8 +2712,16 @@
       if(lockEl) lockEl.classList.remove('open');
       updateMaintenanceLockUI();
     } else {
-      errEl.textContent = 'Username atau password salah.';
+      registerFailedAdminAttempt();
+      const nowLocked = getAdminLockRemaining();
+      if(nowLocked > 0){
+        const sisaMenit = Math.ceil(nowLocked / 60000);
+        errEl.textContent = `Terlalu banyak percobaan gagal. Coba lagi dalam ${sisaMenit} menit.`;
+      } else {
+        errEl.textContent = 'Username atau password salah.';
+      }
       errEl.style.display = 'block';
+      document.getElementById('adminPass').value = '';
     }
   }
 
