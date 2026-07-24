@@ -178,7 +178,7 @@
   .modal-close:hover{color:var(--text);}
   .modal-card h2{font-size:22px;}
   .modal-card > p{font-size:13.5px; color:var(--text-dim); margin-top:8px; margin-bottom:22px;}
-  .google-btn-slot{display:flex; justify-content:center; min-height:44px;}
+  .google-btn-slot{position:relative; display:flex; justify-content:center; min-height:44px; border-radius:5px; overflow:hidden;}
   .divider{display:flex; align-items:center; gap:12px; margin:20px 0; font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em;}
   .divider::before, .divider::after{content:''; flex:1; height:1px; background:var(--line);}
   .btn-guest{
@@ -1279,14 +1279,19 @@
             <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.4 29.4 35.5 24 35.5c-6.4 0-11.5-5.1-11.5-11.5S17.6 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l6-6C33.9 5.9 29.2 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.9 19 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l6-6C33.9 5.9 29.2 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.7 13.5-4.7l-6.2-5.3C29.3 35.5 26.8 36.5 24 36.5c-5.3 0-9.8-3.1-11.3-7.5l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.5 5.6-6.5 7l6.2 5.3C38.5 37.6 42 31.5 42 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
             <span>Masuk dengan Google</span>
           </button>
-          <!-- Tombol ASLI dari Google Identity Services -- disembunyikan secara visual
-               (bukan display:none, supaya browser tetap mau memprosesnya sebagai
-               tombol sungguhan), lalu diklik otomatis lewat JS begitu tombol
-               custom di atas ditekan. Seluruh proses auth-nya terjadi di domain
-               accounts.google.com sendiri, jadi tidak butuh iframe/storage relay
-               dari authDomain project Firebase -- ini yang bikin lebih stabil
-               dibanding signInWithPopup/signInWithRedirect di HP. -->
-          <div id="gsiButtonContainer" style="position:absolute; width:1px; height:1px; overflow:hidden; opacity:0.01; pointer-events:none;"></div>
+          <!-- Tombol ASLI dari Google Identity Services -- dirender di sini lalu
+               ditumpuk PENUH (overlay) tepat di atas tombol custom di atas,
+               dibuat nyaris transparan (opacity 0.01, BUKAN 1x1px seperti versi
+               lama). Klik pengguna jadi betul-betul mendarat di tombol Google
+               yang asli (bukan disimulasikan lewat elemen.click() ke tombol
+               berukuran 1px yang sering gagal ditemukan/dirender Google --
+               itu penyebab muncul toast "Google Sign-In belum siap"). Selama
+               belum siap, pointer-events dibiarkan "none" (lihat script di
+               bawah) supaya klik tetap tembus ke tombol custom sebagai
+               fallback. Seluruh proses auth tetap terjadi di domain
+               accounts.google.com sendiri, jadi tidak butuh iframe/storage
+               relay dari authDomain project Firebase. -->
+          <div id="gsiButtonContainer" style="position:absolute; inset:0; width:100%; height:100%; overflow:hidden; opacity:0.01; pointer-events:none;"></div>
         </div>
         
         <div class="divider">atau masuk pakai akun</div>
@@ -1629,19 +1634,61 @@
   // Android) sekarang membatasi penyimpanan lintas-domain semacam itu demi
   // privasi, sehingga proses itu sering gagal diam-diam atau error
   // "storage-partitioned browser environment". GIS mengerjakan seluruh
-  // proses otentikasi di domain accounts.google.com milik Google sendiri
-  // (lewat tombol asli Google, cuma disembunyikan tampilannya lalu diklik
-  // otomatis lewat loginWithGoogle di bawah), baru menyerahkan hasilnya
-  // (JWT idToken) ke Firebase lewat signInWithCredential -- jadi tidak
-  // pernah butuh penyimpanan lintas-domain sama sekali.
+  // proses otentikasi di domain accounts.google.com milik Google sendiri.
+  //
+  // CATATAN PERBAIKAN: versi lama merender tombol asli Google ke wadah
+  // berukuran 1x1px yang disembunyikan, lalu memicunya lewat elemen.click()
+  // dari JS. Itu penyebab toast "Google Sign-In belum siap" sering muncul --
+  // tombol seukuran 1px kadang gagal dirender penuh oleh Google (atau
+  // strukturnya berubah sehingga querySelector tidak ketemu), dan klik hasil
+  // simulasi seperti itu makin sering ditolak oleh pemeriksaan FedCM/
+  // anti-spoofing terbaru Google karena bukan interaksi asli pengguna.
+  // Sekarang tombol asli Google dirender PENUH menutupi tombol custom
+  // (nyaris transparan lewat opacity, bukan lewat ukuran 1px), sehingga klik
+  // pengguna betul-betul mendarat langsung di tombol Google yang sungguhan.
   const GOOGLE_WEB_CLIENT_ID = '559749643999-di1igas9vur4m7e3sa6m58punt8fa3fv.apps.googleusercontent.com';
   let gsiReady = false;
+  let gsiInitAttempts = 0;
+  const GSI_MAX_ATTEMPTS = 40; // ~40 x 300ms = 12 detik -- cukup lama, tapi tidak menunggu selamanya
+
+  // Lebar tombol Google dibatasi Google sendiri (200px - 400px). Disamakan
+  // dengan lebar wadah tombol custom supaya overlay-nya pas menutupi.
+  function gsiButtonWidth(){
+    const slot = document.querySelector('.google-btn-slot');
+    const raw = (slot && slot.offsetWidth) || 300;
+    return Math.max(200, Math.min(400, Math.round(raw)));
+  }
+
+  function renderGsiButton(){
+    const container = document.getElementById('gsiButtonContainer');
+    if(!container) return;
+    container.style.pointerEvents = 'none';
+    container.innerHTML = '';
+    google.accounts.id.renderButton(container, {
+      type: 'standard', theme: 'outline', size: 'large', width: gsiButtonWidth(), logo_alignment: 'center'
+    });
+    // renderButton menaruh <iframe> Google ke dalam container secara async --
+    // overlay baru diizinkan menangkap klik (pointer-events:auto) setelah
+    // dipastikan iframe-nya benar-benar ada. Kalau gagal muncul, overlay
+    // dibiarkan pointer-events:none supaya klik tetap tembus dengan aman ke
+    // tombol custom di bawahnya (lihat loginWithGoogle -- fallback pesan).
+    setTimeout(() => {
+      const rendered = container.querySelector('iframe, div[role="button"]');
+      if(rendered){
+        container.style.pointerEvents = 'auto';
+        gsiReady = true;
+      }
+    }, 250);
+  }
 
   function initGoogleIdentityServices(){
     if(!window.google || !google.accounts || !google.accounts.id){
-      // Script https://accounts.google.com/gsi/client belum selesai dimuat --
-      // coba lagi sebentar. Wajar terjadi sesaat setelah halaman baru dibuka.
-      setTimeout(initGoogleIdentityServices, 300);
+      // Script https://accounts.google.com/gsi/client belum selesai dimuat,
+      // atau gagal dimuat sama sekali (mis. diblokir jaringan/adblock).
+      // Wajar terjadi sesaat setelah halaman baru dibuka -- dicoba lagi,
+      // tapi dibatasi supaya tidak polling selamanya kalau memang gagal total.
+      gsiInitAttempts++;
+      if(gsiInitAttempts <= GSI_MAX_ATTEMPTS) setTimeout(initGoogleIdentityServices, 300);
       return;
     }
     google.accounts.id.initialize({
@@ -1650,14 +1697,19 @@
       auto_select: false,
       itp_support: true
     });
-    // Tombol asli Google dirender ke wadah tersembunyi (lihat #gsiButtonContainer
-    // di HTML) -- ini yang sungguh-sungguh diklik lewat loginWithGoogle().
-    google.accounts.id.renderButton(document.getElementById('gsiButtonContainer'), {
-      type: 'standard', theme: 'outline', size: 'large'
-    });
-    gsiReady = true;
+    renderGsiButton();
   }
   initGoogleIdentityServices();
+
+  // Modal login default-nya tersembunyi (display:none) saat skrip ini
+  // pertama jalan, jadi lebar wadah tombol belum bisa diukur akurat.
+  // Render ulang begitu modal benar-benar dibuka & lagi saat layar diputar/
+  // resize, supaya tombol Google selalu pas menutupi tombol custom.
+  window.fbRefreshGoogleButton = function(){
+    if(!window.google || !google.accounts || !google.accounts.id) return;
+    renderGsiButton();
+  };
+  window.addEventListener('resize', () => { if(gsiReady) renderGsiButton(); });
 
   // Dipanggil otomatis oleh Google Identity Services setelah user memilih
   // akun Google-nya. response.credential berisi JWT idToken yang sudah
@@ -1679,24 +1731,13 @@
     }
   }
 
-  // Dipanggil dari tombol custom "Masuk dengan Google" (lihat loginWithGoogle
-  // di bawah). Meng-klik tombol ASLI Google yang sudah dirender tersembunyi --
-  // ini yang memicu jendela pilih akun Google, di domain Google sendiri.
-  window.fbTriggerGoogleSignIn = function(){
-    if(!gsiReady){
-      return { ok:false, code:'not-ready' };
-    }
-    const realBtn = document.querySelector('#gsiButtonContainer div[role="button"]');
-    if(!realBtn){
-      return { ok:false, code:'button-not-found' };
-    }
-    realBtn.click();
-    return { ok:true };
-  };
-  // UI (loginWithGoogle) memasang fungsi ini supaya hasil login (sukses/gagal)
-  // bisa diproses balik ke tampilan, walau prosesnya async lewat callback GIS
-  // di atas, bukan lewat return value langsung seperti signInWithPopup dulu.
-  window.fbGoogleSignInResultHandler = null;
+  // Klik pengguna sekarang mendarat LANGSUNG di tombol Google asli (lewat
+  // overlay transparan yang menutupi tombol custom -- lihat CSS/HTML
+  // .google-btn-slot & #gsiButtonContainer), jadi tidak ada lagi trigger
+  // simulasi dari JS. window.fbGoogleSignInResultHandler dipasang permanen
+  // di bawah (bukan per-klik) supaya hasilnya selalu tertangkap kapan pun
+  // callback Google Identity Services di atas terpanggil.
+  window.fbIsGoogleSignInReady = function(){ return gsiReady; };
 
   window.fbUserSignOut = async function(){
     try{ await signOut(auth); }catch(e){ console.error('Gagal logout dari Firebase:', e); }
@@ -1902,8 +1943,10 @@
   /* ---------- AUTH: Google (Google Identity Services + Firebase Auth) &
      Akun Terdaftar ----------
      Login Google sekarang diproses lewat Google Identity Services +
-     signInWithCredential (window.fbTriggerGoogleSignIn /
-     handleGoogleCredentialResponse), yang benar-benar memverifikasi identitas
+     signInWithCredential (tombol Google asli di-overlay langsung di atas
+     tombol custom, lalu hasilnya ditangani lewat
+     window.fbGoogleSignInResultHandler / handleGoogleCredentialResponse),
+     yang benar-benar memverifikasi identitas
      di server Google/Firebase -- bukan lagi decode token JWT manual di
      client seperti sebelumnya, jadi tidak bisa dipalsukan dari console
      browser. Login "Tamu" sudah dihapus; sekarang wajib pakai Google atau
@@ -2246,44 +2289,38 @@
     }catch(e){}
   }
 
-  function loginWithGoogle(){
-    // Captcha TIDAK diwajibkan di sini (beda dari login email/password & daftar
-    // di bawah) -- proses login Google sudah diverifikasi langsung oleh
-    // Google/Firebase sendiri (user harus pilih akun Google asli & lolos
-    // pengecekan Google), jadi sudah aman dari bot tanpa captcha tambahan.
-    if(!window.fbTriggerGoogleSignIn){
-      toast('Koneksi ke server login belum siap. Coba muat ulang halaman.');
-      return;
-    }
+  // Handler PERMANEN untuk hasil login Google -- dipasang sekali di sini
+  // (bukan dipasang/dilepas tiap klik seperti versi lama), karena sekarang
+  // klik pengguna mendarat LANGSUNG di tombol Google asli yang di-overlay
+  // tepat di atas tombol custom (lihat #gsiButtonContainer). Dengan begitu
+  // hasilnya selalu tertangkap kapan pun callback Google Identity Services
+  // terpanggil, tanpa bergantung urutan/timing pemasangan per-klik yang
+  // rawan meleset.
+  window.fbGoogleSignInResultHandler = function(result){
     const btn = document.getElementById('googleSignInBtn');
-    if(btn) btn.disabled = true;
-
-    // Hasil sebenarnya datang ASYNC lewat callback Google Identity Services
-    // (handleGoogleCredentialResponse di script Firebase), bukan return value
-    // langsung -- jadi kita pasang handler-nya di sini dulu.
-    window.fbGoogleSignInResultHandler = function(result){
-      if(btn) btn.disabled = false;
-      window.fbGoogleSignInResultHandler = null;
-      if(!result.ok){
-        toast('Login Google gagal diproses. Coba lagi sebentar lagi.');
-        return;
-      }
-      setUser(applyNameOverride({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null }));
-      closeLoginModal();
-    };
-
-    const trigger = window.fbTriggerGoogleSignIn();
-    if(!trigger.ok){
-      if(btn) btn.disabled = false;
-      window.fbGoogleSignInResultHandler = null;
-      toast('Google Sign-In belum siap, coba muat ulang halaman sebentar lagi.');
+    if(btn) btn.disabled = false;
+    if(!result.ok){
+      toast('Login Google gagal diproses. Coba lagi sebentar lagi.');
       return;
     }
-    // Kalau user menutup sendiri jendela pilih akun Google tanpa memilih apa
-    // pun, Google Identity Services TIDAK memanggil callback sama sekali --
-    // jadi tombol perlu dikembalikan aktif setelah beberapa saat supaya tidak
-    // macet ter-disable selamanya.
-    setTimeout(() => { if(btn && btn.disabled) btn.disabled = false; }, 15000);
+    setUser(applyNameOverride({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null }));
+    closeLoginModal();
+  };
+
+  // Dipanggil dari tombol custom "Masuk dengan Google". Kalau tombol Google
+  // asli sudah aktif (overlay-nya menutupi tombol ini), fungsi ini TIDAK
+  // pernah kepanggil -- klik pengguna sudah keburu ditangkap tombol Google
+  // yang sungguhan. Jadi fungsi ini murni jadi jaring pengaman untuk kasus
+  // Google belum siap (skrip masih dimuat / gagal dimuat sama sekali).
+  function loginWithGoogle(){
+    if(window.fbIsGoogleSignInReady && window.fbIsGoogleSignInReady()){
+      // Overlay-nya seharusnya sudah menangkap klik ini duluan; kalau sampai
+      // sini berarti pas-pasan waktunya -- coba render ulang lalu minta user klik lagi.
+      window.fbRefreshGoogleButton && window.fbRefreshGoogleButton();
+      toast('Coba tekan sekali lagi ya.');
+      return;
+    }
+    toast('Google Sign-In belum siap, coba muat ulang halaman sebentar lagi.');
   }
 
   let toastTimer = null;
@@ -2483,6 +2520,10 @@
   function openLoginModal(){
     document.getElementById('loginModal').classList.add('open');
     resetCaptchaGate();
+    // Saat pertama kali di-render, modal masih tersembunyi (lebar 0px) jadi
+    // tombol Google belum bisa diukur pas. Render ulang begitu modal benar-
+    // benar tampil supaya overlay-nya presisi menutupi tombol custom.
+    setTimeout(() => { window.fbRefreshGoogleButton && window.fbRefreshGoogleButton(); }, 50);
   }
   function closeLoginModal(){ document.getElementById('loginModal').classList.remove('open'); }
 
