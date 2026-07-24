@@ -42,7 +42,6 @@
 <title>LORDSHOP — Top Up Diamond Mobile Legends</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://accounts.google.com/gsi/client" async defer onerror="window.googleScriptBlocked=true;"></script>
 <style>
   :root{
     --bg-void:#0A0E1A;
@@ -1200,11 +1199,11 @@
 
       <div id="adminLoginBox">
         <div class="id-form" style="grid-template-columns:1fr; gap:14px;">
-          <div class="field"><label for="adminUser">Username</label><input id="adminUser" type="text" autocomplete="off"></div>
+          <div class="field"><label for="adminUser">Email</label><input id="adminUser" type="email" autocomplete="off"></div>
           <div class="field"><label for="adminPass">Password</label><input id="adminPass" type="password" autocomplete="off"></div>
           <button class="btn-primary" style="width:100%;" onclick="adminLogin()">Masuk</button>
         </div>
-        <div id="adminLoginError" style="margin-top:12px; font-size:13.5px; color:var(--danger); display:none;">Username atau password salah.</div>
+        <div id="adminLoginError" style="margin-top:12px; font-size:13.5px; color:var(--danger); display:none;">Email atau password salah.</div>
       </div>
 
       <div id="adminPanel" style="display:none;">
@@ -1240,7 +1239,7 @@
     <h2 id="authModalTitle">Masuk ke Akun</h2>
     <p id="authModalSubtitle">Masuk untuk menyimpan dan memantau riwayat pesanan kamu.</p>
 
-    <!-- Verifikasi captcha wajib sebelum lanjut (Masuk maupun Daftar, Google maupun Tamu).
+    <!-- Verifikasi captcha wajib sebelum lanjut (Masuk, Daftar, maupun login Google).
          Sekali salah input dianggap gagal verifikasi dan captcha akan diperbarui otomatis. -->
     <div class="captcha-box" id="captchaBox">
       <div class="captcha-label">
@@ -1267,24 +1266,17 @@
 
       <!-- ===== VIEW: MASUK ===== -->
       <div class="auth-view active" id="authViewLogin">
-        <!-- Ganti data-client_id dengan Client ID asli dari Google Cloud Console.
-             Pastikan domain situs ini juga didaftarkan di "Authorized JavaScript origins"
-             pada Google Cloud Console, kalau tidak Google akan MENOLAK/MEMBLOKIR proses login. -->
-        <div id="g_id_onload"
-             data-client_id="GANTI_DENGAN_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-             data-callback="handleGoogleLogin"
-             data-error_callback="handleGoogleLoginError"
-             data-auto_prompt="false"
-             data-use_fedcm_for_prompt="true"
-             data-itp_support="true">
-        </div>
+        <!-- Login Google sekarang diproses lewat Firebase Authentication
+             (bukan lagi Google Identity Services + decode token manual),
+             supaya identitas pengguna benar-benar diverifikasi di server
+             Google/Firebase, bukan cuma dibaca client-side. -->
         <div class="google-btn-slot">
-          <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-width="300"></div>
+          <button type="button" class="btn-auth-submit" id="googleSignInBtn" onclick="loginWithGoogle()" style="display:flex; align-items:center; justify-content:center; gap:10px; background:#fff; color:#3c4043; border:1px solid #dadce0;">
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.4 29.4 35.5 24 35.5c-6.4 0-11.5-5.1-11.5-11.5S17.6 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l6-6C33.9 5.9 29.2 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.9 19 12.5 24 12.5c2.9 0 5.6 1.1 7.6 2.9l6-6C33.9 5.9 29.2 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.7 13.5-4.7l-6.2-5.3C29.3 35.5 26.8 36.5 24 36.5c-5.3 0-9.8-3.1-11.3-7.5l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-1.1 3.1-3.5 5.6-6.5 7l6.2 5.3C38.5 37.6 42 31.5 42 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
+            <span>Masuk dengan Google</span>
+          </button>
         </div>
-        <div id="googleConfigNotice" style="display:none; background:rgba(227,179,65,0.08); border:1px solid var(--gold-dim); border-radius:6px; padding:12px 14px; font-size:12.5px; color:var(--text-dim); line-height:1.5; text-align:center;">
-          Login Google belum aktif di situs ini. Silakan lanjutkan sebagai Tamu.
-        </div>
-
+        
         <div class="divider">atau masuk pakai akun</div>
 
         <!-- Login dengan email + password akun yang sudah didaftarkan sebelumnya
@@ -1303,9 +1295,6 @@
         <div class="auth-switch" style="margin-top:10px;">
           <button type="button" onclick="switchAuthTab('forgot')" style="color:var(--text-dim); font-weight:500;">Lupa password?</button>
         </div>
-
-        <div class="divider">atau</div>
-        <button class="btn-guest" onclick="loginAsGuest()">Lanjutkan sebagai Tamu</button>
 
         <div class="auth-switch">Belum punya akun? <button type="button" onclick="switchAuthTab('register')">Daftar di sini</button></div>
       </div>
@@ -1497,37 +1486,65 @@
   seluruh koleksi "orders", "vouchers", dan "maintenance" langsung dari
   console browser mereka sendiri, apa pun yang dicek oleh JS di index.html.
 
-  Contoh titik awal yang jauh lebih ketat daripada default (silakan sesuaikan
-  nama koleksi/field dengan skema kamu, lalu tempel ke Firebase Console):
+  Contoh titik awal yang jauh lebih ketat daripada default, DAN cocok dengan
+  login admin di file ini (Firebase Authentication + pengecekan koleksi
+  "admins/{uid}", supaya pelanggan yang login Google TIDAK ikut dianggap
+  admin) -- silakan sesuaikan nama koleksi/field kalau perlu, lalu tempel ke
+  Firebase Console:
 
     rules_version = '2';
     service cloud.firestore {
       match /databases/{database}/documents {
+        function isAdmin() {
+          return request.auth != null &&
+            exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        }
+
         match /orders/{orderId} {
           allow read: if true;              // riwayat pesanan memang publik di UI
           allow create: if request.resource.data.keys().hasAll(['userId','pkg','price'])
                         && request.resource.data.price is number;
-          allow update, delete: if false;   // JANGAN izinkan dari client sama sekali;
-                                             // ubah status/hapus HANYA lewat Cloud Function
-                                             // yang memverifikasi admin di server.
+
+          // Admin sungguhan (UID-nya ada di koleksi admins): boleh ubah/hapus apa saja.
+          allow update, delete: if isAdmin();
+
+          // Bukan admin (termasuk pelanggan yang login Google) hanya boleh
+          // "redeem" voucher miliknya sendiri, dan HANYA boleh mengubah 3
+          // field ini saja -- tidak bisa mengubah price/status/field lain.
+          allow update: if !isAdmin()
+                        && resource.data.type == 'voucher'
+                        && resource.data.status == 'success'
+                        && resource.data.redeemed != true
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['redeemed','redeemedBy','redeemedAt'])
+                        && request.resource.data.redeemed == true;
         }
         match /vouchers/{voucherId} {
           allow read: if true;
-          allow write: if false;            // redeem/approve HARUS lewat Cloud Function
+          allow write: if isAdmin();
         }
         match /maintenance/{docId} {
           allow read: if true;
-          allow write: if false;            // toggle maintenance HARUS lewat Cloud Function
+          allow write: if isAdmin();
+        }
+        match /admins/{uid} {
+          // JANGAN pernah dibuat writable dari client -- dokumen di koleksi
+          // ini cuma boleh ditambah manual lewat Firestore Console (Data tab),
+          // supaya tidak ada cara bagi siapa pun menjadikan dirinya admin
+          // sendiri lewat aplikasi.
+          allow read, write: if false;
         }
       }
     }
 
-  Idealnya: pindahkan semua aksi "admin" (ubah status, hapus, approve voucher,
-  toggle maintenance) ke Cloud Functions yang memverifikasi identitas admin di
-  server (Firebase Auth custom claim), bukan dipanggil langsung dari browser.
-  Selain itu, batasi juga apiKey Firebase di bawah lewat "API key restrictions"
-  di Google Cloud Console (HTTP referrer = domain website ini saja) sebagai
-  lapisan tambahan.
+  PENTING supaya rules ini aman:
+  1. HANYA akun pemilik toko yang boleh dibuat di Firebase Console ->
+     Authentication -> Users (JANGAN aktifkan sign-up publik untuk metode
+     Email/Password).
+  2. Buat 1 dokumen di Firestore -> koleksi "admins" -> Document ID = UID
+     akun pemilik itu (isi field apa saja, mis. role:"admin") -- lewat
+     Firestore Console (Data tab), BUKAN dari aplikasi. Tanpa dokumen ini,
+     akun admin tidak akan dikenali sebagai admin oleh rules di atas.
 -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
@@ -1535,6 +1552,10 @@
     getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, getDoc, getDocs, setDoc,
     onSnapshot, query, where, serverTimestamp, runTransaction
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import {
+    getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
+    GoogleAuthProvider, signInWithPopup
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA_0WJIeKBXHTmTFBD6VHDwov7sFGmK2Rk",
@@ -1547,7 +1568,60 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
   const ordersCol = collection(db, "orders");
+
+  /* ---------- FIREBASE AUTH: dipakai untuk DUA hal berbeda lewat auth
+     instance yang sama --
+       1) Login ADMIN (email/password), dibuat manual di Firebase Console.
+       2) Login GOOGLE untuk pelanggan biasa (menggantikan Google Identity
+          Services lama yang rawan dipalsukan).
+     Supaya keduanya tidak tertukar (customer Google login TIDAK BOLEH otomatis
+     dianggap admin), status admin ditentukan lewat keberadaan dokumen di
+     koleksi Firestore "admins/{uid}" -- BUKAN sekadar "sedang login atau
+     tidak". Dokumen ini harus dibuat manual di Firestore Console untuk UID
+     akun admin saja. Lihat catatan Firestore Rules di atas. */
+  const googleProvider = new GoogleAuthProvider();
+
+  window.fbAdminSignIn = async function(email, password){
+    try{
+      await signInWithEmailAndPassword(auth, email, password);
+      return { ok:true };
+    }catch(e){
+      return { ok:false, code: e && e.code };
+    }
+  };
+  window.fbAdminSignOut = async function(){
+    try{ await signOut(auth); }catch(e){ console.error('Gagal logout admin:', e); }
+  };
+  // callback dipanggil dengan uid (string) kalau ada sesi Firebase Auth aktif,
+  // atau null kalau tidak ada -- baik itu admin maupun pelanggan Google, sama
+  // saja di titik ini. Pembedanya baru terjadi lewat fbCheckIsAdmin di bawah.
+  window.fbOnAdminAuthChange = function(callback){
+    onAuthStateChanged(auth, (user) => callback(user ? user.uid : null));
+  };
+  window.fbCheckIsAdmin = async function(uid){
+    try{
+      const snap = await getDoc(doc(db, 'admins', uid));
+      return snap.exists();
+    }catch(e){ console.error('Gagal cek status admin:', e); return false; }
+  };
+
+  // Login Google untuk PELANGGAN BIASA. Mengembalikan profil yang sudah
+  // diverifikasi Firebase (uid/email/name/picture) -- bukan hasil decode
+  // token manual seperti kode lama, jadi tidak bisa dipalsukan dari console.
+  window.fbUserGoogleSignIn = async function(){
+    try{
+      const result = await signInWithPopup(auth, googleProvider);
+      const u = result.user;
+      return { ok:true, uid:u.uid, email:u.email, name:u.displayName, picture:u.photoURL };
+    }catch(e){
+      return { ok:false, code: e && e.code };
+    }
+  };
+  window.fbUserSignOut = async function(){
+    try{ await signOut(auth); }catch(e){ console.error('Gagal logout dari Firebase:', e); }
+  };
 
   let unsubUserOrders = null;
   let unsubAllOrders = null;
@@ -1689,7 +1763,7 @@
     { id:'p18', amount:'704 Diamond', price:194100, badge:'HEMAT' },
     { id:'p19', amount:'960 Diamond', price:258400, badge:'HEMAT' },
     { id:'p20', amount:'1050 Diamond', price:283400, badge:'HEMAT' },
-    { id:'p21', amount:'1342 Diamond', price:363600, badge:'HEMAT' },
+    { id:'p21', amount:'1342 Diamond', price:363.600, badge:'HEMAT' },
     { id:'p22', amount:'1774 Diamond', price:476900, badge:'HEMAT' },
     { id:'p23', amount:'1835 Diamond', price:493200, badge:'HEMAT' },
     { id:'p24', amount:'2904 Diamond', price:751000, badge:'HEMAT' },
@@ -1740,48 +1814,19 @@
     }[ch]));
   }
 
-  let currentUser = null; // { type:'google'|'account'|'guest', name, email, picture, userId, activeVoucher }
+  let currentUser = null; // { type:'google'|'account', name, email, picture, userId, activeVoucher }
   let pendingCheckout = false;
   let pendingVoucherPurchase = false;
 
   function formatRupiah(n){ return 'Rp ' + n.toLocaleString('id-ID'); }
 
-  /* ---------- AUTH: Google & Tamu ----------
-     PERINGATAN KEAMANAN: decodeJwtPayload() di bawah HANYA membaca isi token,
-     TIDAK memverifikasi tanda tangan (signature) JWT-nya. Secara normal token
-     ini datang dari popup resmi Google Identity Services, tapi karena
-     handleGoogleLogin() adalah fungsi global (wajib, supaya bisa dipanggil
-     Google sebagai callback), siapa pun bisa membuka console browser dan
-     memanggilnya sendiri dengan token buatan (mengaku sebagai email siapa
-     saja). Validasi tambahan di bawah (struktur token + masa berlaku) cuma
-     mengurangi kasus token asal-asalan/kedaluwarsa -- BUKAN pengganti
-     verifikasi signature. Untuk identitas yang benar-benar bisa dipercaya,
-     verifikasi id_token ini harus dilakukan di server/Cloud Function lewat
-     Google token info endpoint, lalu baru Firestore Rules boleh
-     mengandalkannya untuk keputusan akses. */
-  function decodeJwtPayload(token){
-    try{
-      const parts = token.split('.');
-      if(parts.length !== 3) return null; // JWT wajib 3 bagian: header.payload.signature
-      const base64Url = parts[1];
-      const base64 = base64Url.replace(/-/g,'+').replace(/_/g,'/');
-      const json = decodeURIComponent(atob(base64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-      const payload = JSON.parse(json);
-      // Tolak kalau field wajib tidak ada, atau token sudah lewat masa berlaku (exp).
-      if(!payload || typeof payload.email !== 'string' || !payload.email) return null;
-      if(typeof payload.exp === 'number' && Date.now() >= payload.exp * 1000) return null;
-      return payload;
-    }catch(e){ return null; }
-  }
-
-  function getOrCreateGuestId(){
-    let gid = localStorage.getItem('lordshop_guest_id');
-    if(!gid){
-      gid = 'guest_' + Math.random().toString(36).slice(2, 10);
-      localStorage.setItem('lordshop_guest_id', gid);
-    }
-    return gid;
-  }
+  /* ---------- AUTH: Google (Firebase Auth) & Akun Terdaftar ----------
+     Login Google sekarang diproses lewat Firebase Authentication
+     (window.fbUserGoogleSignIn), yang benar-benar memverifikasi identitas
+     di server Google/Firebase -- bukan lagi decode token JWT manual di
+     client seperti sebelumnya, jadi tidak bisa dipalsukan dari console
+     browser. Login "Tamu" sudah dihapus; sekarang wajib pakai Google atau
+     akun terdaftar (email+password buatan sendiri, tab "Daftar"). */
 
   /* ---------- AKUN TERDAFTAR (email + password buatan sendiri, bukan password email) ----------
      Disimpan di localStorage, terpisah dari sesi login (lordshop_session) dan dari
@@ -2095,32 +2140,30 @@
     }catch(e){}
   }
 
-  function handleGoogleLogin(response){
+  async function loginWithGoogle(){
     if(!captchaPassed){
       toast('Verifikasi captcha dulu sebelum login dengan Google.');
       return;
     }
-    const payload = decodeJwtPayload(response.credential);
-    if(!payload){
-      toast('Login Google gagal diproses. Silakan coba lagi atau lanjutkan sebagai Tamu.');
+    if(!window.fbUserGoogleSignIn){
+      toast('Koneksi ke server login belum siap. Coba muat ulang halaman.');
       return;
     }
-    setUser({ type:'google', userId: payload.email, name: payload.name || payload.email, email: payload.email, picture: payload.picture, nameChangeCount:0, lastNameChangeAt:null });
-    closeLoginModal();
-  }
+    const btn = document.getElementById('googleSignInBtn');
+    if(btn) btn.disabled = true;
+    const result = await window.fbUserGoogleSignIn();
+    if(btn) btn.disabled = false;
 
-  // Dipanggil Google kalau proses sign-in gagal/diblokir (mis. FedCM ditolak,
-  // popup diblokir browser, third-party cookie dimatikan, dsb). Supaya pembeli
-  // tidak "terjebak", langsung tampilkan opsi lanjut sebagai Tamu.
-  function handleGoogleLoginError(){
-    window.googleLoginBlocked = true;
-    const notice = document.getElementById('googleConfigNotice');
-    const slot = document.querySelector('.google-btn-slot');
-    if(slot) slot.style.display = 'none';
-    if(notice){
-      notice.textContent = 'Login Google tidak bisa diproses di browser ini (mungkin diblokir). Silakan lanjutkan sebagai Tamu.';
-      notice.style.display = 'block';
+    if(!result.ok){
+      if(result.code === 'auth/popup-closed-by-user'){
+        // User membatalkan sendiri popupnya -- tidak perlu tampilkan error.
+        return;
+      }
+      toast('Login Google gagal diproses. Coba lagi sebentar lagi.');
+      return;
     }
+    setUser({ type:'google', userId: result.email, name: result.name || result.email, email: result.email, picture: result.picture, nameChangeCount:0, lastNameChangeAt:null });
+    closeLoginModal();
   }
 
   let toastTimer = null;
@@ -2131,17 +2174,6 @@
     el.classList.add('show');
     if(toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(()=> el.classList.remove('show'), 3200);
-  }
-
-  function loginAsGuest(){
-    if(!captchaPassed){ toast('Verifikasi captcha dulu sebelum melanjutkan.'); return; }
-    // Login Tamu TIDAK membuat/menyimpan data akun apa pun ke daftar akun (ACCOUNTS_KEY).
-    // Sesi tamu ini cuma dikenali lewat id acak, jadi kalau logout / ganti perangkat,
-    // tidak ada data yang bisa dipakai untuk "masuk lagi" seperti akun terdaftar.
-    const guestId = getOrCreateGuestId();
-    const guestName = 'Tamu-' + guestId.slice(-4);
-    setUser({ type:'guest', userId: guestId, name: guestName, nameChangeCount:0, lastNameChangeAt:null });
-    closeLoginModal();
   }
 
   /* ---------- TAB: MASUK vs DAFTAR (terpisah) ---------- */
@@ -2287,6 +2319,9 @@
   }
 
   function logout(){
+    if(currentUser && currentUser.type === 'google' && window.fbUserSignOut){
+      window.fbUserSignOut();
+    }
     currentUser = null;
     clearPersistedSession();
     renderAuthArea();
@@ -2308,7 +2343,7 @@
         <div class="user-avatar">${avatar}</div>
         <span class="user-name">${escapeHtml(currentUser.name)}</span>
         <div class="user-menu" id="userMenu">
-          <div class="badge-role">${currentUser.type === 'google' ? 'Akun Google' : currentUser.type === 'account' ? 'Akun Terdaftar' : 'Akun Tamu'}</div>
+          <div class="badge-role">${currentUser.type === 'google' ? 'Akun Google' : 'Akun Terdaftar'}</div>
           <button onclick="openOrders()">Pesanan Saya</button>
           <button onclick="logout()">Keluar</button>
         </div>
@@ -2325,39 +2360,13 @@
     if(menu) menu.classList.remove('open');
   });
 
-  function isGoogleConfigured(){
-    const el = document.getElementById('g_id_onload');
-    const clientId = el ? el.getAttribute('data-client_id') : '';
-    return !!clientId && !clientId.startsWith('GANTI_DENGAN');
-  }
-
   function openLoginModal(){
-    const notice = document.getElementById('googleConfigNotice');
-    const slot = document.querySelector('.google-btn-slot');
-    if(window.googleScriptBlocked){
-      // Script accounts.google.com/gsi/client gagal dimuat (biasanya karena
-      // ad-blocker / ekstensi privasi / jaringan memblokir domain Google).
-      if(slot) slot.style.display = 'none';
-      if(notice){
-        notice.textContent = 'Login Google tidak bisa dimuat di browser ini (kemungkinan diblokir oleh ekstensi/ad-blocker). Silakan lanjutkan sebagai Tamu, atau nonaktifkan pemblokir untuk situs ini.';
-        notice.style.display = 'block';
-      }
-    } else if(!isGoogleConfigured()){
-      if(slot) slot.style.display = 'none';
-      if(notice){
-        notice.textContent = 'Login Google belum aktif di situs ini. Silakan lanjutkan sebagai Tamu.';
-        notice.style.display = 'block';
-      }
-    } else {
-      if(slot) slot.style.display = 'flex';
-      if(notice) notice.style.display = 'none';
-    }
     document.getElementById('loginModal').classList.add('open');
     resetCaptchaGate();
   }
   function closeLoginModal(){ document.getElementById('loginModal').classList.remove('open'); }
 
-  /* ---------- CAPTCHA (wajib sebelum login Google maupun Tamu) ---------- */
+  /* ---------- CAPTCHA (wajib sebelum login Google maupun Masuk/Daftar akun) ---------- */
   let captchaCode = '';
   let captchaPassed = false;
 
@@ -2501,52 +2510,42 @@
   }
 
   /* ---------- ADMIN ---------- */
-  // Username & password TIDAK disimpan mentah — hanya hash SHA-256 (+ salt).
-  // Login dicocokkan dengan menghitung ulang hash dari input, lalu dibandingkan.
-  const ADMIN_SALT = 'f63395c2d2beb982497d69e63a27d87a';
-  const ADMIN_HASH = '2157ea06b7cddcff84e9626caacedca3d82eb08c90162872036da6736086f47d';
-  let isAdmin = sessionStorage.getItem('lordshop_admin') === '1';
+  // Login admin diproses oleh Firebase Authentication (lihat window.fbAdminSignIn).
+  // PENTING: instance Firebase Auth yang sama JUGA dipakai untuk login Google
+  // pelanggan biasa (lihat loginWithGoogle di bawah), jadi listener ini TIDAK
+  // BOLEH menganggap "sedang login = admin". Setiap kali status login Firebase
+  // berubah, kita cek dulu ke koleksi Firestore "admins/{uid}" lewat
+  // fbCheckIsAdmin -- cuma UID yang memang terdaftar di sana yang dianggap admin.
+  let isAdmin = false;
 
-  /* ---------- ANTI BRUTE-FORCE UNTUK LOGIN ADMIN ----------
-     PENTING: ini cuma memperlambat percobaan tebak-tebakan dari UI biasa.
-     Hash ADMIN_HASH tetap ada di source JS dan bisa dibaca siapa pun lewat
-     DevTools, jadi tetap bisa di-brute-force OFFLINE tanpa lockout ini sama
-     sekali (lockout ini tidak mencegah itu). Perlindungan yang sesungguhnya
-     WAJIB ada di Firestore Security Rules (server-side), bukan di sini --
-     kode ini hanya lapisan tambahan di UI. */
-  const ADMIN_ATTEMPTS_KEY = 'lordshop_admin_attempts';
-  const MAX_ADMIN_ATTEMPTS = 5;
-  const ADMIN_LOCKOUT_MS = 5 * 60 * 1000; // kunci 5 menit, lebih lama dari login akun biasa
-
-  function getAdminAttempts(){
-    try{ return JSON.parse(localStorage.getItem(ADMIN_ATTEMPTS_KEY)) || { count:0, lockUntil:0 }; }
-    catch(e){ return { count:0, lockUntil:0 }; }
+  function registerAdminAuthListener(){
+    if(!window.fbOnAdminAuthChange) return false;
+    window.fbOnAdminAuthChange(async (uid) => {
+      isAdmin = uid ? await window.fbCheckIsAdmin(uid) : false;
+      const loginBox = document.getElementById('adminLoginBox');
+      const panel = document.getElementById('adminPanel');
+      if(loginBox && panel){
+        loginBox.style.display = isAdmin ? 'none' : 'block';
+        panel.style.display = isAdmin ? 'block' : 'none';
+      }
+      if(isAdmin) renderAdminOrders();
+      updateMaintenanceLockUI();
+    });
+    return true;
   }
-  function saveAdminAttempts(rec){
-    try{ localStorage.setItem(ADMIN_ATTEMPTS_KEY, JSON.stringify(rec)); }catch(e){}
-  }
-  function getAdminLockRemaining(){
-    const rec = getAdminAttempts();
-    if(!rec.lockUntil) return 0;
-    const remaining = rec.lockUntil - Date.now();
-    return remaining > 0 ? remaining : 0;
-  }
-  function registerFailedAdminAttempt(){
-    const rec = getAdminAttempts();
-    rec.count = (rec.count || 0) + 1;
-    if(rec.count >= MAX_ADMIN_ATTEMPTS){
-      rec.lockUntil = Date.now() + ADMIN_LOCKOUT_MS;
-      rec.count = 0;
-    }
-    saveAdminAttempts(rec);
-  }
-  function clearAdminAttempts(){
-    saveAdminAttempts({ count:0, lockUntil:0 });
-  }
-
-  async function sha256Hex(text){
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  // BUG YANG SUDAH DIPERBAIKI: script Firebase di atas pakai type="module",
+  // yang secara spesifikasi HTML baru benar-benar dieksekusi SETELAH seluruh
+  // dokumen selesai di-parse -- yaitu setelah script biasa (non-module) ini
+  // ikut dieksekusi lebih dulu. Akibatnya, kalau kode di bawah ini langsung
+  // dipanggil di sini (top-level, saat halaman baru diparsing), window.fbOnAdminAuthChange
+  // MASIH belum ada isinya sama sekali, sehingga listener status admin tidak
+  // pernah benar-benar terpasang -- login jadi terlihat "berhasil" (tidak ada
+  // pesan error) tapi panel Admin tidak pernah kebuka, seolah-olah UID/rules
+  // yang salah, padahal sebenarnya listener-nya memang tidak pernah aktif.
+  // Perbaikannya: coba pasang listener ini lagi setelah window selesai
+  // dimuat (saat itu module Firebase sudah pasti selesai dieksekusi).
+  if(!registerAdminAuthListener()){
+    window.addEventListener('load', registerAdminAuthListener);
   }
 
   function openAdmin(){
@@ -2678,47 +2677,43 @@
     const u = document.getElementById('adminUser').value.trim();
     const p = document.getElementById('adminPass').value;
     const errEl = document.getElementById('adminLoginError');
+    const btn = document.querySelector('#adminLoginBox .btn-primary');
 
-    if(!window.crypto || !window.crypto.subtle){
-      errEl.textContent = 'Login admin butuh koneksi HTTPS (atau localhost saat pengetesan) agar aman.';
+    if(!u || !p){
+      errEl.textContent = 'Isi email dan password dulu.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if(!window.fbAdminSignIn){
+      errEl.textContent = 'Koneksi ke server login belum siap. Coba muat ulang halaman.';
       errEl.style.display = 'block';
       return;
     }
 
-    const lockRemaining = getAdminLockRemaining();
-    if(lockRemaining > 0){
-      const sisaMenit = Math.ceil(lockRemaining / 60000);
-      errEl.textContent = `Terlalu banyak percobaan gagal. Coba lagi dalam ${sisaMenit} menit.`;
-      errEl.style.display = 'block';
-      return;
-    }
+    if(btn) btn.disabled = true;
+    const result = await window.fbAdminSignIn(u, p);
+    if(btn) btn.disabled = false;
 
-    const attemptHash = await sha256Hex(`${ADMIN_SALT}:${u}:${p}`);
-    if(attemptHash === ADMIN_HASH){
-      clearAdminAttempts();
-      isAdmin = true;
-      sessionStorage.setItem('lordshop_admin', '1');
-      document.getElementById('adminLoginBox').style.display = 'none';
-      document.getElementById('adminPanel').style.display = 'block';
+    if(result.ok){
+      // Tampilan panel & renderAdminOrders() dipicu otomatis oleh
+      // window.fbOnAdminAuthChange (lihat listener di atas), bukan di sini,
+      // supaya sumber kebenaran status login cuma satu tempat.
       document.getElementById('adminUser').value = '';
       document.getElementById('adminPass').value = '';
       errEl.style.display = 'none';
-      renderAdminOrders();
-      // Begitu login admin berhasil, pastikan overlay mode pembaruan langsung
-      // terbuka/hilang — dipaksa eksplisit (bukan cuma lewat perhitungan
-      // shouldLock) supaya admin tidak pernah tersangkut di balik lock walau
-      // ada jeda event real-time dari Firestore.
       const lockEl = document.getElementById('maintenanceLock');
       if(lockEl) lockEl.classList.remove('open');
-      updateMaintenanceLockUI();
     } else {
-      registerFailedAdminAttempt();
-      const nowLocked = getAdminLockRemaining();
-      if(nowLocked > 0){
-        const sisaMenit = Math.ceil(nowLocked / 60000);
-        errEl.textContent = `Terlalu banyak percobaan gagal. Coba lagi dalam ${sisaMenit} menit.`;
+      // Firebase sendiri yang menegakkan pembatasan percobaan gagal
+      // (kode 'auth/too-many-requests' kalau kebanyakan salah), jadi tidak
+      // perlu lockout manual lagi di sisi client.
+      const code = result.code || '';
+      if(code === 'auth/too-many-requests'){
+        errEl.textContent = 'Terlalu banyak percobaan gagal. Coba lagi beberapa saat lagi.';
+      } else if(code === 'auth/invalid-email'){
+        errEl.textContent = 'Format email tidak valid.';
       } else {
-        errEl.textContent = 'Username atau password salah.';
+        errEl.textContent = 'Email atau password salah.';
       }
       errEl.style.display = 'block';
       document.getElementById('adminPass').value = '';
@@ -2726,13 +2721,10 @@
   }
 
   function adminLogout(){
-    isAdmin = false;
-    sessionStorage.removeItem('lordshop_admin');
-    document.getElementById('adminLoginBox').style.display = 'block';
-    document.getElementById('adminPanel').style.display = 'none';
-    // Kalau mode pembaruan masih aktif, keluar dari admin berarti kembali
-    // terkunci seperti pengunjung publik biasa.
-    updateMaintenanceLockUI();
+    if(window.fbAdminSignOut) window.fbAdminSignOut();
+    // isAdmin, tampilan panel, dan updateMaintenanceLockUI() diurus otomatis
+    // oleh listener window.fbOnAdminAuthChange begitu Firebase mengonfirmasi
+    // sesi sudah keluar.
   }
 
   function renderAdminOrders(){
@@ -3036,7 +3028,7 @@
     document.getElementById('accAvatar').innerHTML = currentUser.picture
       ? `<img src="${currentUser.picture}" alt="">` : initials;
     document.getElementById('accName').textContent = currentUser.name;
-    document.getElementById('accType').textContent = currentUser.type === 'google' ? 'Akun Google' : currentUser.type === 'account' ? 'Akun Terdaftar' : 'Akun Tamu';
+    document.getElementById('accType').textContent = currentUser.type === 'google' ? 'Akun Google' : 'Akun Terdaftar';
     document.getElementById('nameEditBox').classList.remove('open');
     document.getElementById('nameEditError').classList.remove('show');
     renderAccountVoucherStatus();
@@ -3227,16 +3219,6 @@
       openLoginModal();
       return;
     }
-    if(currentUser.type === 'guest'){
-      // Akun Tamu tidak boleh beli voucher diskon. Arahkan ke modal Daftar/Masuk —
-      // kalau mereka daftar/masuk akun baru di sini, pembelian voucher akan lanjut otomatis.
-      toast('Akun Tamu tidak bisa beli voucher diskon. Silakan Daftar dulu (atau Masuk kalau sudah punya akun).');
-      pendingVoucherPurchase = true;
-      closeAccountModal();
-      openLoginModal();
-      switchAuthTab('register');
-      return;
-    }
     startVoucherCheckout();
   }
 
@@ -3305,14 +3287,8 @@
     if(!el) return;
     const buyBtn = document.getElementById('buyVoucherBtn');
 
-    // Fitur voucher diskon cuma untuk akun terdaftar (Google atau akun email+password),
-    // bukan akun Tamu — soalnya sesi Tamu ga tersimpan permanen jadi rawan bermasalah
-    // kalau voucher berbayar dikaitkan ke sesi yang bisa hilang begitu saja.
-    if(currentUser && currentUser.type === 'guest'){
-      el.innerHTML = 'Fitur voucher diskon biaya admin hanya untuk akun terdaftar. Silakan <b>Daftar</b> (atau <b>Masuk</b> kalau sudah punya akun) dulu untuk bisa beli/pakai voucher.';
-      if(buyBtn){ buyBtn.disabled = true; buyBtn.style.opacity = '0.5'; buyBtn.style.cursor = 'not-allowed'; }
-      return;
-    }
+    // Fitur voucher diskon berlaku untuk semua akun (Google atau akun email+password),
+    // karena login Tamu sudah dihapus dari situs ini.
     if(buyBtn){ buyBtn.disabled = false; buyBtn.style.opacity = ''; buyBtn.style.cursor = ''; }
 
     const v = getActiveVoucherInfo();
@@ -3475,7 +3451,7 @@
           'Ini alur lengkap top up di LordShop:\n\n' +
           '1. Pilih paket Diamond yang kamu mau di halaman utama (ada juga paket "HEMAT" untuk nominal besar).\n' +
           '2. Isi User ID dan Zone ID akun Mobile Legends kamu dengan teliti — cek ulang biar tidak salah kirim.\n' +
-          '3. Klik "Pesan Sekarang". Kalau belum login, kamu akan diminta login dulu (Google atau sebagai Tamu, ada verifikasi captcha sebentar).\n' +
+          '3. Klik "Pesan Sekarang". Kalau belum login, kamu akan diminta login dulu pakai Google (ada verifikasi captcha sebentar).\n' +
           '4. Cek ringkasan pesanan: paket, biaya admin, dan total yang harus dibayar.\n' +
           '5. Bayar lewat QRIS — scan kode dengan e-wallet/m-banking, lalu salin & masukkan nominal secara manual (kode QRIS ini statis jadi nominal tidak muncul otomatis).\n' +
           '6. Setelah transfer, tekan tombol "Saya Sudah Bayar".\n' +
@@ -3547,7 +3523,7 @@
     if(/(captcha|kode verifikasi|kode tidak muncul|kode salah terus)/.test(t)){
       return {
         text:
-          'Captcha itu langkah verifikasi keamanan sebelum login (baik lewat Google maupun sebagai Tamu), tujuannya mencegah bot otomatis.\n\n' +
+          'Captcha itu langkah verifikasi keamanan sebelum login, tujuannya mencegah bot otomatis.\n\n' +
           'Cara pakainya: lihat kode acak di gambar, ketik persis di kolom yang tersedia, lalu klik "Verifikasi". Kalau kode yang kamu masukkan salah walau cuma sekali, sistem otomatis menganggapnya gagal verifikasi dan akan membuatkan kode baru — jadi kamu tinggal coba lagi dengan kode yang baru itu. Kamu juga bisa klik ikon "Ganti kode" atau gambar captcha-nya kalau ingin kode baru tanpa harus salah dulu.'
       };
     }
@@ -3556,8 +3532,8 @@
     if(/(tidak bisa login|login gagal|akun google|masuk pakai apa)/.test(t)){
       return {
         text:
-          'Kamu bisa login dengan dua cara: pakai akun Google, atau langsung sebagai Tamu tanpa perlu akun apa pun.\n\n' +
-          'Kalau tombol login Google tidak muncul atau gagal dimuat (biasanya karena ad-blocker/ekstensi privasi di browser), sistem akan otomatis menyarankan kamu lanjut sebagai Tamu saja supaya tetap bisa transaksi tanpa hambatan. Riwayat pesanan tetap tersimpan sesuai akun yang kamu pakai saat itu.'
+          'Kamu bisa login pakai akun Google, atau daftar akun email+password sendiri lewat tab Daftar.\n\n' +
+          'Riwayat pesanan tetap tersimpan sesuai akun Google atau akun terdaftar yang kamu pakai saat itu.'
       };
     }
 
